@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">test/unit/utils.js | aion-web3</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="web3-compatible api for working with aion"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="aion-web3"><meta property="twitter:description" content="web3-compatible api for working with aion"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/aionnetwork/aion_web3.git"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">test/unit/utils.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">let utils = require(&apos;../../src/utils&apos;)
+let index = require(&apos;../../src/index&apos;)
+let {startsWithZeroX, removeLeadingZeroX} = require(&apos;../../src/lib/formats&apos;)
+let {cases} = require(&apos;./fixtures&apos;)
+let {noop} = require(&apos;underscore&apos;)
+let BigNumber = require(&apos;bignumber.js&apos;)
+let {each} = require(&apos;underscore&apos;)
+
+// compare sha3 hash outputs with ethereum and crypto-js
+let ethereumWeb3Utils = require(&apos;web3-utils&apos;)
+let cryptojs = require(&apos;crypto-js&apos;)
+let cryptojsSha3Fn = require(&apos;crypto-js/sha3&apos;)
+
+// test method: all items in array are equal
+// discussion: https://stackoverflow.com/questions/14832603/check-if-all-values-of-array-are-equal
+let allEqual = arr =&gt; arr.every(v =&gt; v === arr[0])
+
+function getCryptoJsSha3(val) {
+  let op = &apos;&apos; + val
+  if (startsWithZeroX(val) === true) {
+    op = removeLeadingZeroX(op)
+    op = cryptojs.enc.Hex.parse(op)
+  }
+  op = cryptojsSha3Fn(op, {outputLength: 256}).toString()
+  return `0x${op}`
+}
+
+describe(&apos;utils&apos;, () =&gt; {
+  it(&apos;web3.utils property without instantiation&apos;, () =&gt; {
+    index.utils.should.be.an.Object
+    index.utils.sha3.should.be.a.Function
+  })
+
+  it(&apos;web3().utils property with instantiation&apos;, () =&gt; {
+    new index().utils.should.be.an.Object
+    new index().utils.sha3.should.be.a.Function
+  })
+
+  it(&apos;randomHex&apos;, () =&gt; {
+    should.throws(() =&gt; utils.randomHex())
+    utils.randomHex(0).should.be.exactly(&apos;0x&apos;)
+    utils.randomHex(2).length.should.be.exactly(2 * 2 + 2)
+    utils.randomHex(16).length.should.be.exactly(16 * 2 + 2)
+  })
+
+  it(&apos;_ underscore alias&apos;, () =&gt; {
+    utils._.should.be.a.Function
+  })
+
+  it(&apos;BN alias&apos;, () =&gt; {
+    utils.BN.should.be.a.Function
+  })
+
+  it(&apos;toBN&apos;, () =&gt; {
+    utils.toBN.should.be.a.Function
+  })
+
+  it(&apos;BN&apos;, () =&gt; {
+    let {BN} = utils
+    BN.should.be.a.Function
+    new BN(&apos;16&apos;)
+      .add(new BN(&apos;16&apos;))
+      .toString()
+      .should.equal(&apos;32&apos;)
+  })
+
+  it(&apos;isBN&apos;, () =&gt; {
+    let {BN, isBN} = utils
+    // each of these values should yield `false` when run through isBN
+    let notBns = [
+      undefined,
+      null,
+      8,
+      true,
+      &apos;hi&apos;,
+      {},
+      [],
+      noop,
+      new BigNumber(&apos;8&apos;)
+    ]
+    each(notBns, item =&gt; {
+      isBN(item).should.be.exactly(false)
+    })
+    // one success case
+    let num = new BN(&apos;8&apos;)
+    isBN(num).should.be.exactly(true)
+  })
+
+  it(&apos;isBigNumber&apos;, () =&gt; {
+    let {BN, isBigNumber} = utils
+    let notBigNumbers = [
+      undefined,
+      null,
+      8,
+      true,
+      &apos;hi&apos;,
+      {},
+      [],
+      noop,
+      new BN(&apos;8&apos;),
+      BigNumber
+    ]
+    each(notBigNumbers, item =&gt; {
+      isBigNumber(item).should.be.exactly(false)
+    })
+    // one success case
+    let num = new BigNumber(&apos;8&apos;)
+    isBigNumber(num).should.be.exactly(true)
+  })
+
+  it(&apos;isHex&apos;, () =&gt; {
+    let {isHex} = utils
+
+    let isHexFalseValues = [
+      undefined,
+      null,
+      false,
+      {},
+      [],
+      noop,
+      &apos;ghijklmnopqrstuvxyz!@$%&amp;*()&apos;
+    ]
+    each(isHexFalseValues, item =&gt; isHex(item).should.be.exactly(false))
+
+    let isHexTrueValues = [
+      &apos;0x0123456789abcdef&apos;,
+      &apos;770ce5817d33a7c4&apos;,
+      &apos;38f1dec98c11964e&apos;,
+      25869393,
+      5859828485
+    ]
+    each(isHexTrueValues, item =&gt; isHex(item).should.be.exactly(true))
+  })
+
+  it(&apos;isHexStrict&apos;, () =&gt; {
+    let {isHexStrict} = utils
+
+    // not hex strict
+    let isHexStrictFalseValues = [
+      undefined,
+      null,
+      false,
+      {},
+      [],
+      noop,
+      &apos;ghijklmnopqrstuvyxz!@$%&amp;*()&apos;,
+      25869393,
+      5859828485,
+      // RegExp.test removes &apos;0x&apos;
+      0x25869393,
+      0x5859828485
+    ]
+    each(isHexStrictFalseValues, item =&gt;
+      isHexStrict(item).should.be.exactly(false)
+    )
+
+    // strict
+    let isHexStrictTrueValues = [
+      &apos;0x0123456789abcdef&apos;,
+      &apos;0x770ce5817d33a7c4&apos;,
+      &apos;0x38f1dec98c11964e&apos;
+    ]
+    each(isHexStrictTrueValues, item =&gt;
+      isHexStrict(item).should.be.exactly(true)
+    )
+  })
+
+  it(&apos;hexToBytes&apos;, () =&gt; {
+    let {hexToBytes} = utils
+    hexToBytes(&apos;0x000000ea&apos;).should.eql([0, 0, 0, 234])
+  })
+
+  it(&apos;bytesToHex&apos;, () =&gt; {
+    let {bytesToHex} = utils
+    bytesToHex([0, 0, 0, 234]).should.be.exactly(&apos;0x000000ea&apos;)
+  })
+
+  xit(&apos;checkAddressChecksum&apos;, () =&gt; {
+    let {checkAddressChecksum} = utils
+    each(cases.addresses, ({checksumAddress, validChecksum, throws}) =&gt; {
+      // console.log(&apos;checksumAddress&apos;, checksumAddress)
+      // console.log(&apos;validChecksum&apos;, validChecksum)
+
+      if (throws !== undefined) {
+        should.throws(() =&gt; checkAddressChecksum(checksumAddress))
+        return
+      }
+
+      let op = checkAddressChecksum(checksumAddress)
+      // console.log(&apos;op&apos;, op)
+
+      op.should.be.exactly(validChecksum)
+    })
+  })
+
+  // provided from qoire, cannot get it to work with bit array yet
+  xit(&apos;checkAddressChecksum extended&apos;, () =&gt; {
+    let {checkAddressChecksum} = utils
+    each(cases.checksumAddresses, ({checksumAddress}) =&gt; {
+      // console.log(&apos;checksumAddress&apos;, checksumAddress)
+      let op = checkAddressChecksum(checksumAddress)
+      // console.log(&apos;op&apos;, op)
+      op.should.be.exactly(true)
+    })
+  })
+
+  it(&apos;toChecksumAddress&apos;, () =&gt; {
+    let {toChecksumAddress, checkAddressChecksum} = utils
+    let validAddrs = cases.addresses.filter(item =&gt; item.validChecksum === true)
+    each(validAddrs, ({address /*, checksumAddress*/}) =&gt; {
+      checkAddressChecksum(toChecksumAddress(address)).should.be.exactly(true)
+    })
+  })
+
+  // provided from qoire, cannot get it to work with bit array yet
+  xit(&apos;toChecksumAddress extended&apos;, () =&gt; {
+    let {toChecksumAddress} = utils
+    each(cases.checksumAddresses, ({address, checksumAddress}) =&gt; {
+      toChecksumAddress(address).should.be.exactly(checksumAddress)
+    })
+  })
+
+  it(&apos;utf8ToHex&apos;, () =&gt; {
+    let {utf8ToHex} = utils
+    each(cases.utf8ToHex, ({value, expected}) =&gt; {
+      // console.log(&apos;value&apos;, value)
+      // console.log(&apos;expected&apos;, expected)
+      let hex = utf8ToHex(value)
+      // console.log(&apos;hex&apos;, hex)
+      hex.should.be.exactly(expected)
+    })
+  })
+
+  it(&apos;isAddress&apos;, () =&gt; {
+    let {isAddress} = utils
+    each(cases.addresses, ({address, validAddress}) =&gt; {
+      // console.log(&apos;address&apos;, address)
+      // console.log(&apos;validAddress&apos;, validAddress)
+      // console.log(&apos;isAddress(address)&apos;, isAddress(address))
+      isAddress(address).should.be.exactly(validAddress)
+    })
+  })
+
+  it(&apos;hexToNumberString&apos;, () =&gt; {
+    let {hexToNumberString} = utils
+    hexToNumberString(&apos;0xea&apos;).should.be.exactly(&apos;234&apos;)
+  })
+
+  it(&apos;hexToNumber&apos;, () =&gt; {
+    let {hexToNumber} = utils
+    hexToNumber(&apos;0xea&apos;).should.be.exactly(234)
+  })
+
+  it(&apos;numberToHex&apos;, () =&gt; {
+    let {numberToHex} = utils
+    numberToHex(234).should.be.exactly(&apos;0xea&apos;)
+  })
+
+  it(&apos;hexToUtf8&apos;, () =&gt; {
+    let {hexToUtf8} = utils
+    let hexCases = [
+      {
+        value:
+          &apos;0x486565c3a4c3b6c3b6c3a4f09f9185443334c99dc9a33234d084cdbd2d2e2cc3a4c3bc2b232f&apos;,
+        expected: &apos;Hee&#xE4;&#xF6;&#xF6;&#xE4;&#x1F445;D34&#x25D;&#x263;24&#x404;&#x37D;-.,&#xE4;&#xFC;+#/&apos;
+      },
+      {value: &apos;0x6d79537472696e67&apos;, expected: &apos;myString&apos;},
+      {value: &apos;0x6d79537472696e6700&apos;, expected: &apos;myString&apos;},
+      {
+        value:
+          &apos;0x65787065637465642076616c7565000000000000000000000000000000000000&apos;,
+        expected: &apos;expected value&apos;
+      },
+      {
+        value:
+          &apos;0x000000000000000000000000000000000000657870656374000065642076616c7565&apos;,
+        expected: &apos;expect\u0000\u0000ed value&apos;
+      }
+    ]
+
+    each(hexCases, ({value, expected}) =&gt; {
+      hexToUtf8(value).should.be.exactly(expected)
+    })
+  })
+
+  it(&apos;hexToAscii&apos;, () =&gt; {
+    let {hexToAscii} = utils
+    hexToAscii(&apos;0x4920686176652031303021&apos;).should.be.exactly(&apos;I have 100!&apos;)
+  })
+
+  it(&apos;asciiToHex&apos;, () =&gt; {
+    let {asciiToHex} = utils
+    asciiToHex(&apos;I have 100!&apos;).should.be.exactly(&apos;0x4920686176652031303021&apos;)
+  })
+
+  it(&apos;padLeft&apos;, () =&gt; {
+    let {padLeft} = utils
+    padLeft(&apos;0x3456ff&apos;, 20).should.be.exactly(&apos;0x000000000000003456ff&apos;)
+    padLeft(0x3456ff, 20).should.be.exactly(&apos;0x000000000000003456ff&apos;)
+    padLeft(&apos;Hello&apos;, 20, &apos;x&apos;).should.be.exactly(&apos;xxxxxxxxxxxxxxxHello&apos;)
+  })
+
+  it(&apos;leftPad&apos;, () =&gt; {
+    let {leftPad} = utils
+    leftPad(&apos;0x3456ff&apos;, 20).should.be.exactly(&apos;0x000000000000003456ff&apos;)
+    leftPad(0x3456ff, 20).should.be.exactly(&apos;0x000000000000003456ff&apos;)
+    leftPad(&apos;Hello&apos;, 20, &apos;x&apos;).should.be.exactly(&apos;xxxxxxxxxxxxxxxHello&apos;)
+  })
+
+  it(&apos;padRight&apos;, () =&gt; {
+    let {padRight} = utils
+    padRight(&apos;0x3456ff&apos;, 20).should.be.exactly(&apos;0x3456ff00000000000000&apos;)
+    padRight(0x3456ff, 20).should.be.exactly(&apos;0x3456ff00000000000000&apos;)
+    padRight(&apos;Hello&apos;, 20, &apos;x&apos;).should.be.exactly(&apos;Helloxxxxxxxxxxxxxxx&apos;)
+  })
+
+  it(&apos;rightPad&apos;, () =&gt; {
+    let {rightPad} = utils
+    rightPad(&apos;0x3456ff&apos;, 20).should.be.exactly(&apos;0x3456ff00000000000000&apos;)
+    rightPad(0x3456ff, 20).should.be.exactly(&apos;0x3456ff00000000000000&apos;)
+    rightPad(&apos;Hello&apos;, 20, &apos;x&apos;).should.be.exactly(&apos;Helloxxxxxxxxxxxxxxx&apos;)
+  })
+
+  it(&apos;toTwosComplement&apos;, () =&gt; {
+    let {toTwosComplement} = utils
+    toTwosComplement(&apos;-1&apos;).should.be.exactly(
+      &apos;0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff&apos;
+    )
+    toTwosComplement(-1).should.be.exactly(
+      &apos;0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff&apos;
+    )
+    toTwosComplement(&apos;0x1&apos;).should.be.exactly(
+      &apos;0x0000000000000000000000000000000000000000000000000000000000000001&apos;
+    )
+    toTwosComplement(-15).should.be.exactly(
+      &apos;0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1&apos;
+    )
+    toTwosComplement(&apos;-0x1&apos;).should.be.exactly(
+      &apos;0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff&apos;
+    )
+  })
+
+  it(&apos;sha3&apos;, () =&gt; {
+    let {sha3, BN} = utils
+    let invalidTypes = [undefined, null, 8, 0xff, true, noop, {}]
+
+    // each of these type of values should throw
+    each(invalidTypes, item =&gt; {
+      should.throws(() =&gt; sha3(item))
+    })
+
+    // these values return null
+    // each(utils.values.sha3.nulls, item =&gt; assert.equal(sha3(item), null))
+
+    each(cases.sha3, ({value, expected}) =&gt; {
+      let aionSum = sha3(value)
+      let ethereumWeb3Sum = ethereumWeb3Utils.sha3(value)
+      let cryptojsSum = getCryptoJsSha3(value)
+      let shasums = [aionSum, ethereumWeb3Sum, cryptojsSum]
+      let equality = allEqual(shasums)
+      // console.log(&apos;value&apos;, value)
+      // console.log(&apos;shasums&apos;, shasums)
+      // console.log(&apos;equality&apos;, equality)
+      // console.log(&apos;aionSum&apos;, aionSum)
+      equality.should.be.exactly(true)
+      aionSum.should.be.exactly(expected)
+    })
+
+    // a BN example was shown on ethereum web3 examples so we run it
+    sha3(&apos;234&apos;).should.be.exactly(sha3(new BN(&apos;234&apos;)))
+  })
+
+  xit(&apos;soliditySha3&apos;, () =&gt; {
+    let {soliditySha3} = utils
+    each(cases.soliditySha3, ({values, expected, error}) =&gt; {
+      // console.log(&apos;values&apos;, values)
+      // console.log(&apos;expected&apos;, expected)
+      each(values, item =&gt; {
+        // console.log(&apos;item&apos;, item)
+        // console.log(&apos;typeof item&apos;, typeof item)
+
+        // throwers
+        if (error === true || item.error === true) {
+          should.throws(() =&gt; soliditySha3.apply(undefined, [item]))
+          return
+        }
+
+        // expected solidity sha3 hashes
+        let aionSum = soliditySha3.apply(undefined, [item])
+        aionSum.should.be.exactly(expected)
+      })
+    })
+  })
+
+  it(&apos;blake2b256&apos;, () =&gt; {
+    let {blake2b256} = utils
+    blake2b256(&apos;aion&apos;)
+  })
+})
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+
+--ui bdd
+--require should
+--recursive
+--full-trace
+
+# just stop on the first error
+--bail
+
+--reporter spec
+
+# many operations are async so we wait a while longer
+--slow 2000
+--timeout 20000
+
+--exclude test/unit/server.js
+--exclude test/unit/fixtures.js
+--exclude test/unit/fixtures

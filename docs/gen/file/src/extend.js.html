@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/extend.js | aion-web3</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="web3-compatible api for working with aion"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="aion-web3"><meta property="twitter:description" content="web3-compatible api for working with aion"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/aionnetwork/aion_web3.git"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/extend.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">let get = require(&apos;lodash/get&apos;)
+let set = require(&apos;lodash/set&apos;)
+let {each, isFunction, isEmpty} = require(&apos;underscore&apos;)
+
+// the simplest imput formatter &#x1F609;
+let simpleGetValue = val =&gt; val
+
+function assignExtend(context, {methods = []}) {
+  // Gives web3, eth, bzz, and etc. rpc methods
+  function createRpcMethod({
+    // name,
+    call,
+    // params count
+    params,
+    inputFormatter,
+    outputFormatter
+  }) {
+    let paramCount = params
+
+    return function createRpcMethodInner(...args) {
+      let req = {}
+      let done
+      let provider = context.currentProvider
+      // the method can be a function
+      let method = typeof call === &apos;function&apos; ? call(args) : call
+      let params = []
+      // batch request applies this with context
+      let batch = get(this, &apos;batch&apos;) || false
+
+      // args = Array.from(args)
+
+      if (isFunction(args[args.length - 1]) === true) {
+        // the last arg is a callback
+        done = args.pop()
+      }
+
+      // expecting array but...
+      let formatters = inputFormatter
+
+      // always turn it into an array even with one arg
+      if (isFunction(formatters) === true) {
+        formatters = [formatters]
+      }
+
+      for (let i = 0; i &lt; paramCount; i += 1) {
+        let arg = args[i] || null
+        let formatter = formatters[i] || simpleGetValue
+        params[i] = formatter.call(req, arg)
+      }
+
+      // this params is the rpc call arguments as an array
+      let payload = {method, params}
+
+      let preDone = val =&gt; {
+        if (outputFormatter !== undefined &amp;&amp; val !== undefined) {
+          return outputFormatter.call(req, val)
+        }
+
+        return val
+      }
+
+      // promise api
+      if (done === undefined || batch === true) {
+        return new Promise((resolve, reject) =&gt; {
+          provider.send(payload, (err, res) =&gt; {
+            if (err !== null &amp;&amp; err !== undefined) {
+              // batch mode is like a promise-callback combo
+              if (batch === true &amp;&amp; isEmpty(done) === false) {
+                done(err)
+              }
+              return reject(err)
+            }
+
+            let {error, result} = res
+
+            if (error !== null &amp;&amp; error !== undefined) {
+              let msg
+              if (typeof error === &apos;object&apos;) {
+                msg = Object.keys(error)
+                  .map(key =&gt; `${key}: ${JSON.stringify(error[key])}`)
+                  .join(&apos;,&apos;)
+              }
+
+              if (typeof error === &apos;string&apos;) {
+                msg = error
+              }
+
+              msg = `server error ${msg}`
+              // batch mode is like a promise-callback combo
+              if (batch === true &amp;&amp; isEmpty(done) === false) {
+                done(err)
+              }
+              return reject(new Error(msg))
+            }
+
+            let op = preDone(result)
+            // batch mode is like a promise-callback combo
+            if (isFunction(done) === true) {
+              done(op)
+            }
+            resolve(op)
+          })
+        })
+      }
+
+      // callback api
+      provider.send(payload, (err, res) =&gt; {
+        if (err !== null &amp;&amp; err !== undefined) {
+          return done(err)
+        }
+
+        // console.log(&apos;res&apos;, res)
+        done(null, preDone(res.result))
+      })
+    }
+  }
+
+  context.extend = ({property, methods}) =&gt; {
+    each(methods, item =&gt; {
+      let path = `${item.name}`
+
+      if (property !== undefined) {
+        path = `${property}.${path}`
+      }
+
+      set(context, path, createRpcMethod(item))
+    })
+  }
+
+  context.extend({methods})
+}
+
+module.exports = {assignExtend}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

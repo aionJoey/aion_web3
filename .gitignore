@@ -1,2 +1,11 @@
 node_modules
-release
+*.sublime-*
+
+# before we goto production take this out
+dist
+
+# temporary files
+tmp*
+backup
+tools
+todo.md

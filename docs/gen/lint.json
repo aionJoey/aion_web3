@@ -1,0 +1,116 @@
+[
+  {
+    "name": "getConstructor",
+    "filePath": "src/utils.js",
+    "lines": [
+      {
+        "lineNumber": 65,
+        "line": "/**"
+      },
+      {
+        "lineNumber": 66,
+        "line": " * Get the constructor of whatever is passed in"
+      },
+      {
+        "lineNumber": 67,
+        "line": " * @access private"
+      },
+      {
+        "lineNumber": 68,
+        "line": " * @param {object} obj"
+      },
+      {
+        "lineNumber": 69,
+        "line": " * @returns {string} constructor name"
+      },
+      {
+        "lineNumber": 70,
+        "line": " */"
+      },
+      {
+        "lineNumber": 71,
+        "line": "let getConstructor = val => get(val, 'constructor.name')"
+      }
+    ],
+    "codeParams": [
+      "val"
+    ],
+    "docParams": [
+      "obj"
+    ]
+  },
+  {
+    "name": "hexToBytes",
+    "filePath": "src/utils.js",
+    "lines": [
+      {
+        "lineNumber": 122,
+        "line": "/**"
+      },
+      {
+        "lineNumber": 123,
+        "line": " * Convert a hex string to a byte array"
+      },
+      {
+        "lineNumber": 124,
+        "line": " *"
+      },
+      {
+        "lineNumber": 125,
+        "line": " * @param {string|number|BN} hex"
+      },
+      {
+        "lineNumber": 126,
+        "line": " * @return {array} the byte array"
+      },
+      {
+        "lineNumber": 127,
+        "line": " */"
+      },
+      {
+        "lineNumber": 128,
+        "line": "function hexToBytes(val) {"
+      }
+    ],
+    "codeParams": [
+      "val"
+    ],
+    "docParams": [
+      "hex"
+    ]
+  },
+  {
+    "name": "soliditySha3",
+    "filePath": "src/utils.js",
+    "lines": [
+      {
+        "lineNumber": 651,
+        "line": "/**"
+      },
+      {
+        "lineNumber": 652,
+        "line": " * Converts all the arguments into some other format then hashes it with sha3."
+      },
+      {
+        "lineNumber": 653,
+        "line": " * @param args captures all arguments"
+      },
+      {
+        "lineNumber": 654,
+        "line": " * @return {string} [description]"
+      },
+      {
+        "lineNumber": 655,
+        "line": " */"
+      },
+      {
+        "lineNumber": 656,
+        "line": "function soliditySha3() {"
+      }
+    ],
+    "codeParams": [],
+    "docParams": [
+      "args"
+    ]
+  }
+]

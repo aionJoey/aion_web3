@@ -1,0 +1,423 @@
+{
+  "coverage": "17.33%",
+  "expectCount": 300,
+  "actualCount": 52,
+  "files": {
+    "src/abi.js": {
+      "expectCount": 24,
+      "actualCount": 8,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        10,
+        11,
+        12,
+        37,
+        40,
+        43,
+        45,
+        51,
+        57,
+        61,
+        65,
+        81
+      ]
+    },
+    "src/accounts.js": {
+      "expectCount": 33,
+      "actualCount": 8,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        15,
+        16,
+        17,
+        18,
+        19,
+        25,
+        26,
+        28,
+        63,
+        70,
+        132,
+        137,
+        142,
+        176,
+        199,
+        316,
+        476
+      ]
+    },
+    "src/batch-request.js": {
+      "expectCount": 4,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        3,
+        7,
+        11
+      ]
+    },
+    "src/bzz.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        7
+      ]
+    },
+    "src/contract.js": {
+      "expectCount": 7,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        9,
+        10,
+        13,
+        59
+      ]
+    },
+    "src/eth.js": {
+      "expectCount": 22,
+      "actualCount": 2,
+      "undocumentLines": [
+        1,
+        2,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        16,
+        31,
+        34,
+        37,
+        44,
+        51,
+        58,
+        65,
+        280
+      ]
+    },
+    "src/extend.js": {
+      "expectCount": 5,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        6,
+        8
+      ]
+    },
+    "src/formatters.js": {
+      "expectCount": 22,
+      "actualCount": 1,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        15,
+        17,
+        19,
+        22,
+        32,
+        46,
+        83,
+        95,
+        112,
+        116,
+        139,
+        166,
+        190,
+        219,
+        248,
+        298,
+        312
+      ]
+    },
+    "src/http-provider.js": {
+      "expectCount": 6,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        4,
+        6,
+        11,
+        16
+      ]
+    },
+    "src/iban.js": {
+      "expectCount": 13,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ]
+    },
+    "src/index.js": {
+      "expectCount": 14,
+      "actualCount": 0,
+      "undocumentLines": [
+        2,
+        3,
+        4,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        19
+      ]
+    },
+    "src/ipc-provider.js": {
+      "expectCount": 2,
+      "actualCount": 0,
+      "undocumentLines": [
+        3,
+        8
+      ]
+    },
+    "src/lib/accounts.js": {
+      "expectCount": 13,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        14,
+        25,
+        28,
+        33,
+        35,
+        43,
+        63,
+        65
+      ]
+    },
+    "src/lib/contracts.js": {
+      "expectCount": 3,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        3,
+        37
+      ]
+    },
+    "src/lib/crypto.js": {
+      "expectCount": 9,
+      "actualCount": 0,
+      "undocumentLines": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        16,
+        18,
+        22,
+        30
+      ]
+    },
+    "src/lib/formats.js": {
+      "expectCount": 18,
+      "actualCount": 8,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        108,
+        110
+      ]
+    },
+    "src/lib/patterns.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        1
+      ]
+    },
+    "src/lib/solidity.js": {
+      "expectCount": 8,
+      "actualCount": 1,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        11,
+        44,
+        51
+      ]
+    },
+    "src/lib/transactions.js": {
+      "expectCount": 3,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        3,
+        29
+      ]
+    },
+    "src/lib/validators.js": {
+      "expectCount": 4,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        7
+      ]
+    },
+    "src/lib/values.js": {
+      "expectCount": 2,
+      "actualCount": 0,
+      "undocumentLines": [
+        9,
+        11
+      ]
+    },
+    "src/net.js": {
+      "expectCount": 5,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        5,
+        25
+      ]
+    },
+    "src/personal.js": {
+      "expectCount": 7,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        68
+      ]
+    },
+    "src/providers.js": {
+      "expectCount": 6,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ]
+    },
+    "src/shh.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        1
+      ]
+    },
+    "src/utils.js": {
+      "expectCount": 49,
+      "actualCount": 24,
+      "undocumentLines": [
+        6,
+        8,
+        9,
+        10,
+        12,
+        14,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        158,
+        331,
+        357,
+        429,
+        458,
+        479,
+        484,
+        489,
+        590,
+        726,
+        732,
+        745,
+        752
+      ]
+    },
+    "src/wallet.js": {
+      "expectCount": 16,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        2,
+        3,
+        5,
+        7,
+        13,
+        17,
+        25,
+        35,
+        42,
+        49,
+        60,
+        70,
+        76,
+        84,
+        94
+      ]
+    },
+    "src/websocket-provider.js": {
+      "expectCount": 2,
+      "actualCount": 0,
+      "undocumentLines": [
+        14,
+        16
+      ]
+    }
+  }
+}

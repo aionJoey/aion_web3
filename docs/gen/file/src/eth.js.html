@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/eth.js | aion-web3</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="web3-compatible api for working with aion"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="aion-web3"><meta property="twitter:description" content="web3-compatible api for working with aion"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/aionnetwork/aion_web3.git"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/eth.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">let {EventEmitter} = require(&apos;events&apos;)
+let {noop, each, isString} = require(&apos;underscore&apos;)
+
+let {assignProvider} = require(&apos;./providers&apos;)
+let {assignExtend} = require(&apos;./extend&apos;)
+
+let BatchRequest = require(&apos;./batch-request&apos;)
+let Contract = require(&apos;./contract&apos;)
+let Iban = require(&apos;./iban&apos;)
+let Accounts = require(&apos;./accounts&apos;)
+let Net = require(&apos;./net&apos;)
+let Personal = require(&apos;./personal&apos;)
+
+let {hexToNumber, toChecksumAddress, numberToHex, isHex} = require(&apos;./utils&apos;)
+
+let {
+  outputSyncingFormatter,
+  inputAddressFormatter,
+  inputDefaultBlockNumberFormatter,
+  inputBlockNumberFormatter,
+  outputBlockFormatter,
+  outputTransactionFormatter,
+  outputTransactionReceiptFormatter,
+  inputTransactionFormatter,
+  inputSignFormatter,
+  inputCallFormatter,
+  inputLogFormatter,
+  outputLogFormatter
+} = require(&apos;./formatters&apos;)
+
+let hexSplit = (val, one, two) =&gt;
+  isString(val) === true &amp;&amp; isHex(val) === true ? one : two
+
+let blockCall = ([val]) =&gt;
+  hexSplit(val, &apos;eth_getBlockByHash&apos;, &apos;eth_getBlockByNumber&apos;)
+
+let uncleCall = ([val]) =&gt;
+  hexSplit(
+    val,
+    &apos;eth_getUncleByBlockHashAndIndex&apos;,
+    &apos;eth_getUncleByBlockNumberAndIndex&apos;
+  )
+
+let getBlockTransactionCountCall = ([val]) =&gt;
+  hexSplit(
+    val,
+    &apos;eth_getBlockTransactionCountByHash&apos;,
+    &apos;eth_getBlockTransactionCountByNumber&apos;
+  )
+
+let uncleCountCall = ([val]) =&gt;
+  hexSplit(
+    val,
+    &apos;eth_getUncleCountByBlockHash&apos;,
+    &apos;eth_getUncleCountByBlockNumber&apos;
+  )
+
+let transactionFromBlockCall = ([val]) =&gt;
+  hexSplit(
+    val,
+    &apos;eth_getTransactionByBlockHashAndIndex&apos;,
+    &apos;eth_getTransactionByBlockNumberAndIndex&apos;
+  )
+
+let methods = [
+  {
+    name: &apos;getNodeInfo&apos;,
+    call: &apos;web3_clientVersion&apos;
+  },
+  {
+    name: &apos;getProtocolVersion&apos;,
+    call: &apos;eth_protocolVersion&apos;,
+    params: 0
+  },
+  {
+    name: &apos;getCoinbase&apos;,
+    call: &apos;eth_coinbase&apos;,
+    params: 0
+  },
+  {
+    name: &apos;isMining&apos;,
+    call: &apos;eth_mining&apos;,
+    params: 0
+  },
+  {
+    name: &apos;getHashrate&apos;,
+    call: &apos;eth_hashrate&apos;,
+    params: 0
+    // outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;isSyncing&apos;,
+    call: &apos;eth_syncing&apos;,
+    params: 0,
+    outputFormatter: outputSyncingFormatter
+  },
+  {
+    name: &apos;getGasPrice&apos;,
+    call: &apos;eth_gasPrice&apos;,
+    params: 0
+    // outputFormatter: outputBigNumberFormatter
+  },
+  {
+    name: &apos;getAccounts&apos;,
+    call: &apos;eth_accounts&apos;,
+    params: 0,
+    outputFormatter: val =&gt;
+      val.length === 0 ? val : val.map(toChecksumAddress)
+  },
+  {
+    name: &apos;getBlockNumber&apos;,
+    call: &apos;eth_blockNumber&apos;,
+    params: 0,
+    outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;getBalance&apos;,
+    call: &apos;eth_getBalance&apos;,
+    params: 2
+    // inputFormatter: [inputAddressFormatter, inputDefaultBlockNumberFormatter],
+    // outputFormatter: outputBigNumberFormatter
+  },
+  {
+    name: &apos;getStorageAt&apos;,
+    call: &apos;eth_getStorageAt&apos;,
+    params: 3,
+    inputFormatter: [
+      inputAddressFormatter,
+      numberToHex,
+      inputDefaultBlockNumberFormatter
+    ]
+  },
+  {
+    name: &apos;getCode&apos;,
+    call: &apos;eth_getCode&apos;,
+    params: 2,
+    inputFormatter: [inputAddressFormatter, inputDefaultBlockNumberFormatter]
+  },
+  {
+    name: &apos;getBlock&apos;,
+    call: blockCall,
+    params: 2,
+    inputFormatter: [
+      inputBlockNumberFormatter,
+      function(val) {
+        return !!val
+      }
+    ],
+    outputFormatter: outputBlockFormatter
+  },
+  {
+    name: &apos;getUncle&apos;,
+    call: uncleCall,
+    params: 2,
+    inputFormatter: [inputBlockNumberFormatter, numberToHex],
+    outputFormatter: outputBlockFormatter
+  },
+  {
+    name: &apos;getBlockTransactionCount&apos;,
+    call: getBlockTransactionCountCall,
+    params: 1,
+    inputFormatter: [inputBlockNumberFormatter],
+    outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;getBlockUncleCount&apos;,
+    call: uncleCountCall,
+    params: 1,
+    inputFormatter: [inputBlockNumberFormatter],
+    outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;getTransaction&apos;,
+    call: &apos;eth_getTransactionByHash&apos;,
+    params: 1,
+    inputFormatter: [null],
+    outputFormatter: outputTransactionFormatter
+  },
+  {
+    name: &apos;getTransactionFromBlock&apos;,
+    call: transactionFromBlockCall,
+    params: 2,
+    inputFormatter: [inputBlockNumberFormatter, numberToHex],
+    outputFormatter: outputTransactionFormatter
+  },
+  {
+    name: &apos;getTransactionReceipt&apos;,
+    call: &apos;eth_getTransactionReceipt&apos;,
+    params: 1,
+    inputFormatter: [null],
+    outputFormatter: outputTransactionReceiptFormatter
+  },
+  {
+    name: &apos;getTransactionCount&apos;,
+    call: &apos;eth_getTransactionCount&apos;,
+    params: 2,
+    inputFormatter: [inputAddressFormatter, inputDefaultBlockNumberFormatter],
+    outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;sendSignedTransaction&apos;,
+    call: &apos;eth_sendRawTransaction&apos;,
+    params: 1,
+    inputFormatter: [null]
+  },
+  {
+    name: &apos;signTransaction&apos;,
+    call: &apos;eth_signTransaction&apos;,
+    params: 1,
+    inputFormatter: [inputTransactionFormatter]
+  },
+  {
+    name: &apos;sendTransaction&apos;,
+    call: &apos;eth_sendTransaction&apos;,
+    params: 1,
+    inputFormatter: [inputTransactionFormatter]
+  },
+  {
+    name: &apos;sign&apos;,
+    call: &apos;eth_sign&apos;,
+    params: 2,
+    inputFormatter: [inputSignFormatter, inputAddressFormatter],
+    transformPayload: function(payload) {
+      payload.params.reverse()
+      return payload
+    }
+  },
+  {
+    name: &apos;call&apos;,
+    call: &apos;eth_call&apos;,
+    params: 2,
+    inputFormatter: [inputCallFormatter, inputDefaultBlockNumberFormatter]
+  },
+  {
+    name: &apos;estimateGas&apos;,
+    call: &apos;eth_estimateGas&apos;,
+    params: 1,
+    inputFormatter: [inputCallFormatter],
+    outputFormatter: hexToNumber
+  },
+  {
+    name: &apos;getCompilers&apos;,
+    call: &apos;eth_getCompilers&apos;,
+    params: 0
+  },
+  {
+    name: &apos;compile.solidity&apos;,
+    call: &apos;eth_compileSolidity&apos;,
+    params: 1
+  },
+  {
+    name: &apos;compile.lll&apos;,
+    call: &apos;eth_compileLLL&apos;,
+    params: 1
+  },
+  {
+    name: &apos;compile.serpent&apos;,
+    call: &apos;eth_compileSerpent&apos;,
+    params: 1
+  },
+  {
+    name: &apos;submitWork&apos;,
+    call: &apos;eth_submitWork&apos;,
+    params: 3
+  },
+  {
+    name: &apos;getWork&apos;,
+    call: &apos;eth_getWork&apos;,
+    params: 0
+  },
+  {
+    name: &apos;getPastLogs&apos;,
+    call: &apos;eth_getLogs&apos;,
+    params: 1,
+    inputFormatter: [inputLogFormatter],
+    outputFormatter: outputLogFormatter
+  }
+]
+
+function Eth(provider, providerOpts) {
+  this._subscriptions = []
+
+  assignProvider(this, {provider, providerOpts})
+  assignExtend(this, {methods})
+
+  this.defaultAccount = null
+  this.defaultBlock = &apos;latest&apos;
+  this.net = new Net()
+  this.personal = new Personal()
+  this.personal.setProvider(this.currentProvider)
+
+  this.accounts = new Accounts()
+}
+
+Eth.prototype.Iban = Iban
+Eth.prototype.Contract = Contract
+Eth.prototype.BatchRequest = BatchRequest
+
+/**
+ * Subscribe to server events
+ *
+ * Subscribe to these events:
+ * + pendingTransactions
+ * + newBlockHeaders
+ * + syncing
+ * + logs, options {fromBlock, address, topics}
+ *
+ * Emitter events:
+ * + data, object
+ * + change, object
+ * + error, Error
+ *
+ * @param {string} evtName event name
+ * @param {object} [opts]
+ * @param {number} opts.fromBlock
+ * @param {string|array} opts.address
+ * @param {array} opts.topics
+ * @param {function} done
+ * @return {object}
+ */
+Eth.prototype.subscribe = function(evtName, opts, done) {
+  let sub = new EventEmitter()
+  sub.id = Math.random()
+    .toString()
+    .substring(2)
+  sub.evtName = evtName
+  sub.options = opts
+
+  if (opts === undefined &amp;&amp; done === undefined) {
+    opts = {}
+    done = noop
+  }
+
+  if (typeof opts === &apos;function&apos;) {
+    done = opts
+    opts = {}
+  }
+
+  sub.subscribe = done =&gt; {
+    done()
+  }
+
+  sub.unsubscribe = done =&gt; {
+    done()
+  }
+
+  sub.arguments = arguments
+
+  this._subscriptions.push(sub)
+
+  return sub
+}
+
+/**
+ * Unsubscribe on this instance of Eth
+ * @param {boolean} keepSyncing clear all except syncing
+ * @return {boolean}
+ */
+Eth.prototype.clearSubscriptions = function(keepSyncing = false) {
+  each(this._subscriptions, item =&gt; {
+    if (keepSyncing === true &amp;&amp; item.evtName === &apos;syncing&apos;) {
+      return
+    }
+    item.unsubscribe()
+  })
+  return true
+}
+
+module.exports = Eth
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
