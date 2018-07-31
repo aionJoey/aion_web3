@@ -1,4 +1,5 @@
 let abi = require('../../src/abi')
+let cases = require('./fixtures').cases.abi
 
 describe('abi', () => {
   it('encodeEventSignature', () => {
@@ -45,25 +46,45 @@ describe('abi', () => {
       .should.be.exactly(op)
   })
 
-  xit('encodeParameter', () => {
-    abi
-      .encodeParameter('uint128', '2345675643')
-      .should.be.exactly('0x0000000000000000000000008bd02b7b')
-    abi
-      .encodeParameter('uint64', '2345675643')
-      .should.be.exactly('0x0000000000000000000000008bd02b7b')
-    abi
-      .encodeParameter('bytes32', '0xdf3234')
-      .should.be.exactly('0xdf32340000000000000000000000000000')
-    abi
-      .encodeParameter('bytes', '0xdf3234')
-      .should.be.exactly(
-        '0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000003df32340000000000000000000000000000000000000000000000000000000000'
-      )
-    abi
-      .encodeParameter('bytes32[]', ['0xdf3234', '0xfdfd'])
-      .should.be.exactly(
-        '00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002df32340000000000000000000000000000000000000000000000000000000000fdfd000000000000000000000000000000000000000000000000000000000000'
-      )
+  it('encodeParametersIntermediate', () => {
+    let {encodeParametersIntermediate} = abi
+    cases.forEach(({types, params, expected}) => {
+      let op = encodeParametersIntermediate({
+        types,
+        params
+      })
+      op.lines.should.eql(expected)
+    })
+  })
+
+  it('encodeParameters', () => {
+    let {encodeParameters} = abi
+    cases.forEach(({types, params, expected}) => {
+      let op = encodeParameters(types, params)
+      op.should.eql('0x' + expected.join(''))
+    })
+  })
+
+  it('encodeParameter', () => {
+    let {encodeParameter} = abi
+    let type = 'int'
+    let param = 0xffffff
+    encodeParameter(type, param).should.eql(
+      '0x00000000000000000000000000ffffff'
+    )
+    type = 'bool[3]'
+    param = [false, true, false]
+    encodeParameter(type, param).should.eql(
+      '0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000'
+    )
+  })
+
+  it('decodeParameters', () => {
+    let {encodeParameters, decodeParameters} = abi
+    cases.forEach(({types, params}) => {
+      let encoded = encodeParameters(types, params)
+      let decoded = decodeParameters(types, encoded)
+      decoded.should.eql(params)
+    })
   })
 })

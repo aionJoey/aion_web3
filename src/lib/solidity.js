@@ -1,57 +1,6 @@
-let {isEmpty} = require('underscore')
-let get = require('lodash/get')
+let {isEmpty, isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
-
-/*
-
-solidity type-specific information
-
-*/
-let types = {
-  function: {
-    length: 4
-  },
-  bool: {
-    pad: 'left'
-  },
-  uint: {
-    pad: 'left'
-  },
-  int: {
-    pad: 'left'
-  },
-  fixed: {
-    pad: 'left'
-  },
-  ufixed: {
-    pad: 'left'
-  },
-  address: {
-    // acts as uint
-    pad: 'left'
-  },
-  bytes: {
-    pad: 'right',
-    dynamic: true
-  },
-  string: {
-    pad: 'right',
-    dynamic: true
-  }
-}
-
-function isSolidityArrayType(val) {
-  return (
-    val.indexOf(values.solidity.dimensionStartChar) > -1 &&
-    val.indexOf(values.solidity.dimensionEndChar) > -1
-  )
-}
-
-function isSolidityDynamicType(val) {
-  let dyn = get(types, `${val}.dynamic`)
-  return dyn === true || val.indexOf(values.solidity.dimensionsDynamic) > -1
-}
 
 /**
  * Parse the solidity type and give relevant information such is dimensions
@@ -59,37 +8,57 @@ function isSolidityDynamicType(val) {
  * @return {object}
  */
 function parseType(val) {
-  let op = {}
   let baseType = patterns.solidityTypeNoLength.exec(val)
-  let byteLength = patterns.typeN.exec(val)
+  let bitLength = patterns.typeN.exec(val)
   let dimensions = val.match(patterns.solidityDimensions)
+  let hasDimensions
+  let hasDynamicDimensions
 
   if (isEmpty(baseType) === false) {
-    op.baseType = baseType[1]
+    baseType = baseType[1]
   }
 
-  if (isEmpty(byteLength) === false) {
-    op.byteLength = parseInt(byteLength[1], 10)
+  if (isEmpty(bitLength) === false) {
+    bitLength = parseInt(bitLength[1], 10)
   }
 
-  op.array = isSolidityArrayType(val)
-  op.dynamic = isSolidityDynamicType(val) || isSolidityDynamicType(baseType)
+  // bytes and string are dynamic
 
   if (isEmpty(dimensions) === false) {
-    op.dimensions = dimensions.map((item, index) => {
-      let op = {index}
+    dimensions = dimensions.map(item => {
+      let op = {}
       let digit = item.match(patterns.solidityDimensionDigit)
+
+      // having [] is dynamic
+      op.dynamic = item === values.solidity.dimensionsDynamic
+
+      // otherwise the user specified a fixed length
       if (isEmpty(digit) === false) {
         op.length = parseInt(digit[0], 10)
       }
+
       return op
     })
   }
 
-  return op
+  // has [] or [6] or [][2]
+  hasDimensions = isArray(dimensions) === true
+
+  // has [] or [][]
+  hasDynamicDimensions =
+    hasDimensions === true &&
+    isArray(dimensions) === true &&
+    dimensions.some(item => item.dynamic === true)
+
+  return {
+    baseType,
+    bitLength,
+    dimensions,
+    hasDimensions,
+    hasDynamicDimensions
+  }
 }
 
 module.exports = {
-  types,
   parseType
 }

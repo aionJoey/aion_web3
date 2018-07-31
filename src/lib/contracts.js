@@ -1,9 +1,13 @@
 let {createValidator} = require('./validators')
 
-let jsonInterfaceSchema = {
+//
+// contract function interface schema
+//
+let functionInterfaceSchema = {
   type: 'object',
+  required: ['type', 'name', 'inputs'],
   properties: {
-    type: {fn: true},
+    type: {type: 'string', enum: ['function', 'constructor', 'fallback']},
     name: {type: 'string'},
     constant: {type: 'boolean'},
     payable: {type: 'boolean'},
@@ -34,6 +38,35 @@ let jsonInterfaceSchema = {
   }
 }
 
-let jsonInterfaceValidator = createValidator(jsonInterfaceSchema)
+//
+// contract event interface schema
+//
+let eventInterfaceSchema = {
+  type: 'object',
+  required: ['type', 'name', 'inputs', 'anonymous'],
+  properties: {
+    type: {type: 'string', enum: ['event']},
+    name: {type: 'string'},
+    inputs: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['name', 'type', 'indexed'],
+        properties: {
+          name: {type: 'string'},
+          type: {type: 'string'},
+          indexed: {type: 'boolean'}
+        }
+      }
+    }
+  }
+}
 
-module.exports = {jsonInterfaceValidator}
+let functionInterfaceValidator = createValidator(functionInterfaceSchema)
+
+let eventInterfaceValidator = createValidator(eventInterfaceSchema)
+
+module.exports = {
+  functionInterfaceValidator,
+  eventInterfaceValidator
+}

@@ -27,7 +27,7 @@ describe('Accounts', () => {
   })
 
   // connects to a node
-  xit('signTransaction', done => {
+  xit('signTransaction (slow)', done => {
     let account = accounts.create()
     let tx = {
       gas: '50000',
@@ -73,7 +73,7 @@ describe('Accounts', () => {
     assert.equal(equalAddresses(account.address, recovery), true)
   })
 
-  xit('encrypt (scrypt)', () => {
+  xit('encrypt (scrypt, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'scrypt'
@@ -81,7 +81,7 @@ describe('Accounts', () => {
     keystore.version.should.be.exactly(3)
   })
 
-  xit('encrypt (pbkdf2)', () => {
+  xit('encrypt (pbkdf2, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'pbkdf2'
@@ -97,7 +97,7 @@ describe('Accounts', () => {
     keystore.crypto.mac.should.be.a.String
   })
 
-  xit('decrypt (scrypt)', () => {
+  xit('decrypt (scrypt, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'scrypt'
@@ -106,7 +106,7 @@ describe('Accounts', () => {
     assert.equal(account.address, decryptedAccount.address)
   })
 
-  xit('decrypt (pbkdf2)', () => {
+  xit('decrypt (pbkdf2, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'pbkdf2'

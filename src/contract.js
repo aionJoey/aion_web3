@@ -1,5 +1,9 @@
 let {EventEmitter} = require('events')
-let {isObject} = require('underscore')
+let get = require('lodash/get')
+let cloneDeep = require('lodash/cloneDeep')
+let {isArray, each} = require('underscore')
+let {copyString} = require('./lib/formats')
+let abi = require('./abi')
 
 let {
   inputLogFormatter,
@@ -9,8 +13,14 @@ let {
 } = require('./formatters')
 
 let {assignExtend} = require('./extend')
+let {assignProvider} = require('./providers')
+
 let {hexToNumber} = require('./utils')
-// let {jsonInterfaceValidator} = require('./lib/contracts')
+
+let {
+  functionInterfaceValidator
+  /*eventInterfaceValidator*/
+} = require('./lib/contracts')
 
 let methods = [
   {
@@ -18,7 +28,12 @@ let methods = [
     call: 'eth_getLogs',
     params: 1,
     inputFormatter: [inputLogFormatter]
-    // outputFormatter: this._decodeEventABI.bind(subOptions.event)
+  },
+  {
+    name: 'getPastEvents',
+    call: 'eth_getLogs',
+    params: 1,
+    inputFormatter: [inputLogFormatter]
   },
   {
     name: 'estimateGas',
@@ -26,53 +41,76 @@ let methods = [
     params: 1,
     inputFormatter: [inputCallFormatter],
     outputFormatter: hexToNumber
-    // requestManager: _this._parent._requestManager,
-    // accounts: ethAccounts // is eth.accounts (necessary for wallet signing)
-    // defaultAccount: _this._parent.defaultAccount,
-    // defaultBlock: _this._parent.defaultBlock
   },
   {
     name: 'call',
     call: 'eth_call',
     params: 2,
-    inputFormatter: [inputCallFormatter, inputDefaultBlockNumberFormatter]
+    inputFormatter: [inputCallFormatter, inputDefaultBlockNumberFormatter],
     // add output formatter for decoding
-    /*outputFormatter: function(result) {
-      return _this._parent._decodeMethodReturn(_this._method.outputs, result)
-    },*/
-    // requestManager: _this._parent._requestManager,
-    // accounts: ethAccounts, // is eth.accounts (necessary for wallet signing)
-    // defaultAccount: _this._parent.defaultAccount,
-    // defaultBlock: _this._parent.defaultBlock
+    outputFormatter: function(result) {
+      let {_outputs} = this
+      return abi.decodeParameters(_outputs, result)
+    }
   },
   {
-    name: 'sendTransaction',
+    name: 'send',
     call: 'eth_sendTransaction',
     params: 1,
     inputFormatter: [inputTransactionFormatter]
-    // requestManager: _this._parent._requestManager,
-    // accounts: _this.constructor._ethAccounts || _this._ethAccounts, // is eth.accounts (necessary for wallet signing)
-    // defaultAccount: _this._parent.defaultAccount,
-    // defaultBlock: _this._parent.defaultBlock,
-    // extraFormatters: extraFormatters
   }
 ]
 
-function Contract(jsonInterface, address, options) {
-  EventEmitter.call(this)
+function ContractMethod({args, provider, contract, accounts}) {
+  this._contract = contract
+  this._accounts = accounts
+  this._args = args
+  this._outputs = contract.options.jsonInterface.outputs
   assignExtend(this, {methods})
+  assignProvider(this, {provider})
+}
 
-  /*let [valid, errors] = jsonInterfaceValidator(jsonInterface)
+ContractMethod.prototype.encodeABI = function(params) {
+  return abi.encodeFunctionCall(this._contract.options.jsonInterface, params)
+}
 
-  console.log('valid', valid)
-  console.log('errors', errors)*/
+function Contract(jsonInterface, address, options) {
+  let contract = this
 
-  if (isObject(address) === true) {
-    this.options = address
+  EventEmitter.call(contract)
+  assignExtend(contract, {methods})
+
+  let provider = get(contract, 'constructor.currentProvider')
+  assignProvider(contract, {provider})
+
+  let iface = cloneDeep(jsonInterface)
+  let addr = copyString(address)
+  let opts = cloneDeep(options)
+
+  if (isArray(jsonInterface) === false) {
+    iface = [iface]
   }
 
-  this.address = address || null
-  this.options = options || {}
+  each(iface, item => {
+    let [valid, error] = functionInterfaceValidator(item)
+
+    if (valid === false) {
+      throw new Error(error)
+    }
+  })
+
+  // magically get accounts
+  let accounts =
+    get(contract, 'constructor.accounts') ||
+    get(contract, 'constructor._accounts')
+  contract._accounts = accounts
+
+  contract.jsonInterface = iface
+  contract.address = addr
+  contract.options = opts
+
+  contract.options.address = addr
+  contract.options.jsonInterface = iface
 
   /*
 
@@ -80,15 +118,30 @@ function Contract(jsonInterface, address, options) {
 
   */
 
-  /*let handler = {
-    get(target, name) {
-      function contractMethod(args) {}
+  let handler = {
+    get: function(obj, fnName) {
+      if (fnName in obj) {
+        return obj[fnName]
+      }
+
+      return function contractMethodCreator(...args) {
+        let accounts = contract._accounts
+        return new ContractMethod({args, provider, contract, accounts})
+      }
     }
   }
 
-  this.methods = new Proxy(this, handler)*/
+  contract.methods = new Proxy(this, handler)
 }
 
 Contract.prototype = Object.create(EventEmitter.prototype)
+
+Contract.prototype.clone = function() {
+  let {options} = this
+  let {jsonInterface, address} = options
+  return new Contract(jsonInterface, address, options)
+}
+
+// Contract.prototype.deploy = function(options, done) {}
 
 module.exports = Contract

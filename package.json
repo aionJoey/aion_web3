@@ -72,12 +72,10 @@
     "jsonrpc"
   ],
   "author": "aionnetwork",
-  "authors": [
-    {
-      "name": "chris",
-      "email": "aion.6368726973@gmail.com",
-      "url": "https://github.com/aion-6368726973"
-    }
-  ],
+  "authors": [{
+    "name": "chris",
+    "email": "aion.6368726973@gmail.com",
+    "url": "https://github.com/aion-6368726973"
+  }],
   "license": "LGPL-3.0"
 }

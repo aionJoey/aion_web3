@@ -85,7 +85,8 @@ function toBuffer(val, encoding) {
   }
 
   if (isNaN(val) === false || isNumber(val) === true || BN.isBN(val) === true) {
-    return Buffer.from(numberToBn(val).toString('hex'), 'hex')
+    // to array from BN is an array of bytes
+    return Buffer.from(numberToBn(val).toArray())
   }
 
   // string

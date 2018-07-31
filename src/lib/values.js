@@ -87,16 +87,68 @@ let values = Object.freeze({
       zero: '00',
       one: '01'
     },
-    typeStringLength: 32,
-    typeByteLength: 16,
-    addressByteLength: 32,
-    boolean: {
-      zero: '0x00000000000000000000000000000000',
-      one: '0x00000000000000000000000000000001'
-    },
+
     dimensionStartChar: '[',
     dimensionEndChar: ']',
-    dimensionsDynamic: '[]'
+    dimensionsDynamic: '[]',
+    /*
+
+    solidity type-specific information
+
+    */
+    types: {
+      function: {
+        // encoded(hashed) signature is short
+        byteLengthEncoded: 4,
+        bytelength: 16
+      },
+      bool: {
+        pad: 'left',
+        byteLength: 16,
+        stringLength: 32,
+        zero: '00000000000000000000000000000000',
+        one: '00000000000000000000000000000001'
+      },
+      uint: {
+        pad: 'left',
+        byteLength: 16,
+        stringLength: 32
+      },
+      int: {
+        pad: 'left',
+        byteLength: 16,
+        stringLength: 32
+      },
+      fixed: {
+        pad: 'left',
+        byteLength: 16,
+        stringLength: 32
+      },
+      ufixed: {
+        pad: 'left',
+        byteLength: 16,
+        stringLength: 32
+      },
+      address: {
+        // acts as uint256
+        // the only exception
+        pad: 'left',
+        byteLength: 32,
+        stringLength: 64
+      },
+      bytes: {
+        pad: 'right',
+        dynamic: true,
+        byteLength: 16,
+        stringLength: 32
+      },
+      string: {
+        pad: 'right',
+        dynamic: true,
+        byteLength: 16,
+        stringLength: 32
+      }
+    }
   }
 })
 

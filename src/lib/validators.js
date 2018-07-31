@@ -1,17 +1,29 @@
-let {isArray} = require('underscore')
+let {isEmpty} = require('underscore')
 let Ajv = require('ajv')
 let ajv = new Ajv()
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'))
 
-let createValidator = schema => {
+function parseError(jsonSchemaError) {
+  let {keyword, dataPath, schemaPath, params, message} = jsonSchemaError
+  let err = new Error(`
+    Data path "${dataPath}" had a problem validating "${keyword}"
+    ---
+    schema path: ${schemaPath}
+         params: ${JSON.stringify(params)}
+        message: ${message}
+  `)
+  err.jsonSchemaError = jsonSchemaError
+  return err
+}
+
+function createValidator(schema) {
   let validator = ajv.compile(schema)
-  return val => {
+  return function createValidatorInner(val) {
     let valid = validator(val)
-    let errors = validator.errors
-    let error = errors
-    if (isArray(errors) === true) {
-      error = errors[0]
+    let error
+    if (isEmpty(validator.errors) === false) {
+      error = parseError(validator.errors[0])
     }
     return [valid, error]
   }

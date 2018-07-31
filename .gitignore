@@ -1,5 +1,6 @@
 node_modules
 *.sublime-*
+.eslintcache
 
 # before we goto production take this out
 dist

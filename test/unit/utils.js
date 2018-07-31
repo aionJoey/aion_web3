@@ -1,6 +1,15 @@
+/*
+
+originally what it was doing was hashing data with other libraries
+and comparing to this library's results.
+
+that's why a lot of commented. it could be removed or used.
+
+*/
+
 let utils = require('../../src/utils')
 let index = require('../../src/index')
-let {startsWithZeroX, removeLeadingZeroX} = require('../../src/lib/formats')
+// let {startsWithZeroX, removeLeadingZeroX} = require('../../src/lib/formats')
 let {cases} = require('./fixtures')
 let {noop} = require('underscore')
 let BigNumber = require('bignumber.js')
@@ -13,9 +22,9 @@ let {each} = require('underscore')
 
 // test method: all items in array are equal
 // discussion: https://stackoverflow.com/questions/14832603/check-if-all-values-of-array-are-equal
-let allEqual = arr => arr.every(v => v === arr[0])
+// let allEqual = arr => arr.every(v => v === arr[0])
 
-function getCryptoJsSha3(val) {
+/*function getCryptoJsSha3(val) {
   let op = '' + val
   if (startsWithZeroX(val) === true) {
     op = removeLeadingZeroX(op)
@@ -23,7 +32,7 @@ function getCryptoJsSha3(val) {
   }
   op = cryptojsSha3Fn(op, {outputLength: 256}).toString()
   return `0x${op}`
-}
+}*/
 
 describe('utils', () => {
   it('web3.utils property without instantiation', () => {

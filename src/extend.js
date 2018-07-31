@@ -1,3 +1,11 @@
+/*
+
+it can be a bit complex since it's passing context to the
+methods it's assigned. for now the input and output formatters
+rely on the context.
+
+*/
+
 let get = require('lodash/get')
 let set = require('lodash/set')
 let {each, isFunction, isEmpty} = require('underscore')
@@ -19,7 +27,7 @@ function assignExtend(context, {methods = []}) {
     let paramCount = params
 
     return function createRpcMethodInner(...args) {
-      let req = {}
+      // let req = {}
       let done
       let provider = context.currentProvider
       // the method can be a function
@@ -46,7 +54,8 @@ function assignExtend(context, {methods = []}) {
       for (let i = 0; i < paramCount; i += 1) {
         let arg = args[i] || null
         let formatter = formatters[i] || simpleGetValue
-        params[i] = formatter.call(req, arg)
+        // called in the context given to assignExtend
+        params[i] = formatter.call(context, arg)
       }
 
       // this params is the rpc call arguments as an array
@@ -58,7 +67,8 @@ function assignExtend(context, {methods = []}) {
 
       let preDone = val => {
         if (outputFormatter !== undefined && val !== undefined) {
-          return outputFormatter.call(req, val)
+          // called in the context given to assignExtend
+          return outputFormatter.call(context, val)
         }
 
         return val
