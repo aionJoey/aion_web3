@@ -72,18 +72,6 @@ let signTransactionDefaults = {
   value: values.zeroX
 }
 
-function fromNat(val) {
-  if (val === values.nat.zero) {
-    return values.zeroX
-  }
-
-  if (val.length % 2 === 0) {
-    return val
-  }
-
-  return values.nat.zero + removeLeadingZeroX(val)
-}
-
 /**
  * Account constructor
  * @param {object} options
@@ -195,6 +183,8 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
 }
 
 Accounts.prototype.signTransaction = function(tx, privateKey, done) {
+  let accounts = this
+
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
       return done(err)
@@ -237,44 +227,98 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       this.getTransactionCount(account.address, 'latest', done)
   }
 
+  if (transaction.nonce !== undefined) {
+    transaction.nonce = transaction.nonce.toString()
+  }
+
   function sign(res) {
-    console.log('res', res)
-    console.log('transaction', transaction)
     transaction = Object.assign({}, transaction, res)
-    let [valid, error] = validateTransaction(transaction)
+    /*let [valid, error] = validateTransaction(transaction)
 
     if (valid === false) {
       throw error
+    }*/
+
+    let {to, data, value, gas, gasLimit, gasPrice, nonce, chainId} = transaction
+
+    // console.log('transaction', transaction)
+
+    /*
+
+    Ethereum:
+
+    -----------------------------
+    | Nonce    | Up to 32 bytes |
+    -----------------------------
+    | GasPrice | Up to 32 bytes |
+    -----------------------------
+    | GasLimit | Up to 32 bytes |
+    -----------------------------
+    | To       | 20 bytes addr  |
+    -----------------------------
+    | Value    | Up to 32 bytes |
+    -----------------------------
+    | Data     | 0 - unlimited  |
+    -----------------------------
+    | V        | 1 (usually)    |
+    -----------------------------
+    | R        | 32 bytes       |
+    -----------------------------
+    | S        | 32 bytes       |
+    -----------------------------
+
+    Aion:
+
+    RLP_TX_NONCE = 0
+    RLP_TX_TO = 1
+    RLP_TX_VALUE = 2
+    RLP_TX_DATA = 3
+    RLP_TX_TIMESTAMP = 4,
+    RLP_TX_NRG = 5
+    RLP_TX_NRGPRICE = 6
+    RLP_TX_TYPE = 7
+    RLP_TX_SIG = 8
+
+    */
+
+    function rlpNum(val) {
+      return toBuffer(val).toString('hex')
     }
 
-    let {
-      to,
-      // from,
-      data,
-      value,
-      gas,
-      // gasLimit,
-      gasPrice,
-      nonce,
-      chainId
-    } = transaction
-
     let rlpValues = [
-      fromNat(nonce),
-      fromNat(gasPrice),
-      fromNat(gas),
+      rlpNum(nonce),
       to.toLowerCase(),
-      fromNat(value),
+      rlpNum(value),
       data,
-      fromNat(chainId),
-      values.zeroX,
-      values.zeroX
+      rlpNum(Date.now().toString()),
+      rlpNum(gas),
+      rlpNum(gasPrice),
+      rlpNum(chainId || '0x1')
     ]
 
+    // console.log('rlpValues', rlpValues)
+
     let encoded = rlp.encode(rlpValues)
+
+    // console.log('encoded', encoded)
+
     let messageHash = keccak256(encoded)
-    let signature = toBuffer(nacl.sign(toBuffer(messageHash), _nacl.secretKey))
-    let rawTx = rlp.decode(encoded).concat(signature)
+
+    // console.log('messageHash', messageHash)
+
+    let {signature} = accounts.sign(messageHash, privateKey)
+
+    signature = toBuffer(signature)
+
+    // console.log('signature', signature)
+    // console.log('signature.length', signature.length)
+
+    let rawTx = rlp.decode(encoded)
+
+    // console.log('1 rawTx', rawTx)
+    rawTx.push(signature)
+    // console.log('2 rawTx', rawTx)
+
     let rawTransaction = rlp.encode(rawTx)
 
     messageHash = bytesToHex(messageHash)
@@ -285,6 +329,9 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       messageHash,
       signature,
       rawTransaction
+      /*v: rawTx[6],
+      r: rawTx[7],
+      s: rawTx[8]*/
     }
   }
 
@@ -296,7 +343,8 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       }
 
       try {
-        done(null, sign(res))
+        let op = sign(res)
+        done(null, op)
       } catch (e) {
         done(e)
       }
@@ -347,9 +395,12 @@ Accounts.prototype.sign = function(message, privateKey) {
     this._findAccountByPk(privateKey) || this.privateKeyToAccount(privateKey)
   let messageHash = this.hashMessage(message)
   let messageSignature = nacl.sign(toBuffer(messageHash), _nacl.secretKey)
-  let signature = Buffer.concat([toBuffer(address), messageSignature]).toString(
+  /*let signature = Buffer.concat([toBuffer(address), messageSignature]).toString(
     'hex'
-  )
+  )*/
+  let signature = Buffer.concat([_nacl.publicKey, messageSignature])
+    .slice(0, nacl.sign.publicKeyLength + nacl.sign.signatureLength)
+    .toString('hex')
   return {
     message,
     messageHash,

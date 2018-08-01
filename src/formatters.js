@@ -48,29 +48,24 @@ function inputBlockNumberFormatter(val) {
 }
 
 function txInputFormatter(options) {
-  if (options.to) {
+  if (options.to !== undefined) {
     // it might be contract creation
     options.to = inputAddressFormatter(options.to)
   }
 
-  if (options.data && options.input) {
+  if (options.data !== undefined && options.input !== undefined) {
     throw new Error(
       'You can\'t have "data" and "input" as properties of transactions at the same time, please use either "data" or "input" instead.'
     )
   }
 
-  if (!options.data && options.input) {
+  if (options.data === undefined && options.input !== undefined) {
     options.data = options.input
     delete options.input
   }
 
-  if (options.data && !isHex(options.data)) {
+  if (options.data !== undefined && isHex(options.data) === true) {
     throw new Error('The data field must be HEX encoded data.')
-  }
-
-  // allow both
-  if (options.gas || options.gasLimit) {
-    options.gas = options.gas || options.gasLimit
   }
 
   ;['gasPrice', 'gas', 'value', 'nonce']
@@ -100,7 +95,7 @@ function inputTransactionFormatter(options) {
   options = txInputFormatter(options)
 
   // check from, only if not number, or object
-  if (!isNumber(options.from) && !isObject(options.from)) {
+  if (isNumber(options.from) === false && isObject(options.from) === false) {
     options.from = options.from || (this ? this.defaultAccount : null)
 
     if (!options.from && !isNumber(options.from)) {

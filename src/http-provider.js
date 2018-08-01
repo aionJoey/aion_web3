@@ -34,6 +34,8 @@ HttpProvider.prototype.send = function(payload, done) {
       done(null, result)
     })
     .catch(done)
+
+  return
 }
 
 module.exports = HttpProvider

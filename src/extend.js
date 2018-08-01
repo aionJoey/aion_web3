@@ -106,6 +106,8 @@ function assignExtend(context, {methods = []}) {
         done(null, op)
       })
     }
+
+    return
   }
 
   context.extend = ({property, methods}) => {
