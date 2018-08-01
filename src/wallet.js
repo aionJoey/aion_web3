@@ -1,4 +1,4 @@
-let {isString, isEmpty, each} = require('underscore')
+let {isString, each} = require('underscore')
 let {isBuffer, toBuffer} = require('./lib/formats')
 let {isAccountAddress} = require('./lib/accounts')
 
@@ -60,7 +60,7 @@ Wallet.prototype.clear = function() {
 Wallet.prototype._getPrivateKeys = function() {
   let items = []
   each(this, (val, key) => {
-    if (isAccountAddress(key) === true && isEmpty(val.privateKey) === false) {
+    if (isAccountAddress(key) === true && val.privateKey !== undefined) {
       items.push(val.privateKey)
     }
   })

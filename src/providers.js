@@ -1,7 +1,6 @@
 let HttpProvider = require('./http-provider')
 let IpcProvider = require('./ipc-provider')
 let WebsocketProvider = require('./websocket-provider')
-let {isEmpty} = require('underscore')
 let values = require('./lib/values')
 
 function assignProvider(
@@ -21,7 +20,7 @@ function assignProvider(
   context.setProvider = function(provider, providerOpts) {
     let prov = provider
 
-    if (isEmpty(prov) === true) {
+    if (prov === undefined) {
       throw new Error('no provider or url was given')
     }
 

@@ -70,7 +70,14 @@ function WebsocketProvider(url, opts) {
       if (finished === true) {
         return
       }
-      done(null, body)
+
+      let {error, result} = body
+
+      if (error !== undefined) {
+        return done(error)
+      }
+
+      done(null, result)
       cleanup()
     }
 

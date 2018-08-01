@@ -11,16 +11,7 @@ let utf8 = require('utf8')
 
 let _ = require('underscore')
 
-let {
-  isEmpty,
-  isObject,
-  isString,
-  isNumber,
-  isEqual,
-  isArray,
-  isBoolean,
-  each
-} = _
+let {isObject, isString, isNumber, isEqual, isArray, isBoolean, each} = _
 
 let get = require('lodash/get')
 let accounts = require('./lib/accounts')
@@ -228,19 +219,7 @@ let rightPad = padRight
  * @param {array} val bytes
  * @return {string}
  */
-let bytesToHex = val =>
-  prependZeroX(
-    val
-      .map(item => {
-        let op = item.toString(16)
-        if (op.length === 1) {
-          // zero pad
-          op = `0${op}`
-        }
-        return op
-      })
-      .join('')
-  )
+let bytesToHex = val => prependZeroX(Buffer.from(val).toString('hex'))
 
 /**
  * Compute SHA3 256 length hash a.k.a. keccak256
@@ -253,7 +232,8 @@ let bytesToHex = val =>
 function sha3(val) {
   // our keccak256 implementation or ethereum web3 don't accept these values
   if (
-    isEmpty(val) === true ||
+    val === undefined ||
+    val === null ||
     // not having slice meaning it's not an array-like thing
     (typeof val !== 'string' &&
       get(val, 'slice') === undefined &&
@@ -415,7 +395,7 @@ function toHex(val, returnType) {
     }
   }
 
-  if (isEmpty(returnType) === false) {
+  if (returnType !== undefined) {
     if (val < 0) {
       return `int${maxIntSize}`
     }
@@ -730,7 +710,7 @@ function hexToAscii(val) {
 }
 
 function asciiToHex(val) {
-  if (isEmpty(val) === true) {
+  if (val === undefined) {
     return copyString(values.hex.zero)
   }
 

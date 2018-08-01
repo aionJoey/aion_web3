@@ -1,4 +1,4 @@
-let {isString, isEmpty, isArray} = require('underscore')
+let {isString, isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
 let {blake2b256, keccak256} = require('./crypto')
@@ -12,7 +12,7 @@ let {
 } = require('./formats')
 
 function createPrivateKey(entropy) {
-  if (isEmpty(entropy) === true) {
+  if (entropy === undefined) {
     entropy = randomHexBuffer()
   }
   let pk = keccak256(Buffer.concat([randomHexBuffer(), entropy]))
@@ -33,7 +33,7 @@ function createA0Address(privateKey) {
 let createA0AddressString = val => prependZeroX(val.toString('hex'))
 
 function isAccountAddress(val) {
-  if (isEmpty(val) === true || isString(val) === false) {
+  if (val === undefined || isString(val) === false) {
     return false
   }
 

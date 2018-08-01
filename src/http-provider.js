@@ -24,7 +24,15 @@ HttpProvider.prototype.send = function(payload, done) {
 
   fetch(url, fetchOpts)
     .then(res => res.json())
-    .then(res => done(null, res))
+    .then(res => {
+      let {error, result} = res
+
+      if (error !== undefined) {
+        return done(error)
+      }
+
+      done(null, result)
+    })
     .catch(done)
 }
 

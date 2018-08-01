@@ -1,4 +1,4 @@
-let {isString, isNumber, isObject, isArray, isEmpty} = require('underscore')
+let {isString, isNumber, isObject, isArray} = require('underscore')
 let {isAccountAddress} = require('./lib/accounts')
 let {prependZeroX, removeLeadingZeroX} = require('./lib/formats')
 
@@ -207,7 +207,7 @@ function inputLogFormatter(options) {
     return isArray(topic) ? topic.map(toTopic) : toTopic(topic)
   })
 
-  if (isEmpty(options.address) === false) {
+  if (options.address !== undefined) {
     if (isArray(options.address) === true) {
       options.address = options.address.map(function(addr) {
         return inputAddressFormatter(addr)

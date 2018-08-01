@@ -1,6 +1,6 @@
 let padStart = require('lodash/padStart')
 let padEnd = require('lodash/padEnd')
-let {isString, isObject, isEmpty, isArray, isNumber} = require('underscore')
+let {isString, isObject, isArray, isNumber} = require('underscore')
 
 let {
   copyString,
@@ -31,7 +31,7 @@ function fnHashBuffer(val) {
   if (isObject(val) === true) {
     op = copyString(val.name)
 
-    if (isEmpty(val.inputs) === false) {
+    if (isArray(val.inputs) === true) {
       op += '(' + val.inputs.map(item => item.type).join(',') + ')'
     }
   }
@@ -268,12 +268,12 @@ function decodeParameters(types, val) {
     typeList = types
   }
 
-  if (isArray(types) === true && isEmpty(types[0].type) === false) {
+  if (isArray(types) === true && isString(types[0].type) === true) {
     // json interface
     typeList = types.map(item => item.type)
   }
 
-  if (isObject(types) === true && isEmpty(types.type) === false) {
+  if (isObject(types) === true && types.type !== undefined) {
     // one from decode paramter
     typeList = [types.type]
   }

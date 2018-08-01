@@ -1,7 +1,7 @@
 let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
-let {isEmpty, isFunction, isObject, find} = require('underscore')
+let {isFunction, isObject, find} = require('underscore')
 let rlp = require('rlp')
 
 let {assignExtend} = require('./extend')
@@ -15,7 +15,7 @@ let {
   createPrivateKey
 } = require('./lib/accounts')
 
-let {hexToNumber} = require('./utils')
+let {hexToNumber, bytesToHex} = require('./utils')
 let crypto = require('./lib/crypto')
 let {keccak256, nacl, scrypt} = crypto
 let {validateTransaction} = require('./lib/transactions')
@@ -93,29 +93,25 @@ function fromNat(val) {
  * @param {buffer} options.privateKey
  * @returns {object}
  */
-function Account({accounts, address, entropy, privateKey}) {
-  if (isEmpty(accounts) === true) {
+function Account({accounts, entropy, privateKey}) {
+  if (accounts === undefined) {
     throw new Error(
       'an accounts instance is necessary to instantiate an account'
     )
-  }
-
-  if (isEmpty(address) == false && isAccountAddress(address) === false) {
-    throw new Error('an invalid address was passed to Account')
   }
 
   // held internally to access accounts functions
   this._accounts = accounts
 
   // key generation entropy
-  let ent =
-    (isEmpty(entropy) === false && toBuffer(entropy)) || randomHexBuffer()
+  let ent = (entropy !== undefined && toBuffer(entropy)) || randomHexBuffer()
 
   this.privateKey =
-    (isEmpty(privateKey) === false && toBuffer(privateKey)) ||
-    createPrivateKey(ent)
+    (privateKey !== undefined && toBuffer(privateKey)) || createPrivateKey(ent)
 
-  let kp = nacl.sign.keyPair.fromSeed(this.privateKey)
+  let kp = nacl.sign.keyPair.fromSeed(
+    this.privateKey.slice(0, nacl.sign.seedLength)
+  )
 
   this._nacl = {
     publicKey: toBuffer(kp.publicKey),
@@ -126,12 +122,9 @@ function Account({accounts, address, entropy, privateKey}) {
   this._addressBuffer = null
 
   // 0xAO address
-  this.address = address || null
-
-  if (isEmpty(this.address) === true && isEmpty(this.privateKey) === false) {
-    this._addressBuffer = createA0Address(this.privateKey)
-    this.address = createA0AddressString(this._addressBuffer)
-  }
+  this.address = null
+  this._addressBuffer = createA0Address(this.privateKey)
+  this.address = createA0AddressString(this._addressBuffer)
 }
 
 Account.prototype.signTransaction = function(tx, done) {
@@ -179,12 +172,12 @@ Accounts.prototype.create = function(entropy) {
 }
 
 Accounts.prototype._findAccountByPk = function(privateKey) {
-  return find(this.wallet, account => {
-    let privKey = get(account, 'privateKey')
-    if (isEmpty(privKey) === true) {
+  return find(this.wallet, item => {
+    let itemPrivateKey = get(item, 'privateKey')
+    if (itemPrivateKey === undefined) {
       return false
     }
-    return equalBuffers(privateKey, privKey)
+    return equalBuffers(privateKey, itemPrivateKey)
   })
 }
 
@@ -209,7 +202,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     return Promise.reject(err)
   }
 
-  if (isEmpty(tx) === true) {
+  if (tx === undefined) {
     return signTransactionFailed(new Error('no transaction was provided'))
   }
 
@@ -221,29 +214,32 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   let account =
     this._findAccountByPk(privateKey) || this.privateKeyToAccount(privateKey)
   let transaction = Object.assign({}, signTransactionDefaults, tx)
+
   let {_nacl} = account
 
-  if (isEmpty(transaction.from) === true) {
+  if (transaction.from === undefined) {
     transaction.from = account.address
   }
 
-  if (isEmpty(transaction.chainId) === true) {
+  if (transaction.chainId === undefined) {
     // get chain id
     steps.chainId = done => this.getId(done)
   }
 
-  if (isEmpty(transaction.gasPrice) === true) {
+  if (transaction.gasPrice === undefined) {
     // get gas price
     steps.gasPrice = done => this.getGasPrice(done)
   }
 
-  if (isEmpty(transaction.nonce) === true) {
+  if (transaction.nonce === undefined) {
     // get transaction count to use as nonce
     steps.nonce = done =>
       this.getTransactionCount(account.address, 'latest', done)
   }
 
   function sign(res) {
+    console.log('res', res)
+    console.log('transaction', transaction)
     transaction = Object.assign({}, transaction, res)
     let [valid, error] = validateTransaction(transaction)
 
@@ -263,7 +259,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       chainId
     } = transaction
 
-    let encoded = rlp.encode([
+    let rlpValues = [
       fromNat(nonce),
       fromNat(gasPrice),
       fromNat(gas),
@@ -273,12 +269,17 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       fromNat(chainId),
       values.zeroX,
       values.zeroX
-    ])
+    ]
 
+    let encoded = rlp.encode(rlpValues)
     let messageHash = keccak256(encoded)
     let signature = toBuffer(nacl.sign(toBuffer(messageHash), _nacl.secretKey))
     let rawTx = rlp.decode(encoded).concat(signature)
     let rawTransaction = rlp.encode(rawTx)
+
+    messageHash = bytesToHex(messageHash)
+    signature = bytesToHex(signature)
+    rawTransaction = bytesToHex(rawTransaction)
 
     return {
       messageHash,
@@ -290,7 +291,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   // callback
   if (isFunction(done) === true) {
     return parallel(steps, (err, res) => {
-      if (isEmpty(err) === false) {
+      if (err !== undefined && err !== null) {
         return done(err)
       }
 
@@ -305,7 +306,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   // Promise
   return new Promise((resolve, reject) => {
     parallel(steps, (err, res) => {
-      if (isEmpty(err) === false) {
+      if (err !== undefined && err !== null) {
         return reject(err)
       }
 
@@ -387,11 +388,11 @@ Accounts.prototype.recover = function(message, signature) {
  * @return {object} [description]
  */
 Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
-  if (isEmpty(privateKey) === true) {
+  if (privateKey === undefined) {
     throw new Error(`missing private key`)
   }
 
-  if (isEmpty(password) === true) {
+  if (password === undefined) {
     throw new Error(`missing password`)
   }
 
@@ -442,7 +443,7 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
     derivedKey = scrypt.apply(null, scryptArgs)
   }
 
-  if (isEmpty(derivedKey) === true) {
+  if (derivedKey === undefined) {
     throw new Error('Unsupported kdf')
   }
 
@@ -451,7 +452,7 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
   let keyEnd = derivedKey.slice(16, 32)
   let cipher = crypto.node.createCipheriv(algorithm, keyStart, iv)
 
-  if (isEmpty(cipher) === true) {
+  if (cipher === undefined) {
     throw new Error('Unsupported cipher')
   }
 
@@ -479,7 +480,7 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
 }
 
 Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
-  if (isEmpty(password) === true) {
+  if (password === undefined) {
     throw new Error('No password given.')
   }
 
@@ -514,7 +515,7 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
     derivedKey = crypto.node.pbkdf2Sync(pwBuf, saltBuf, c, dklen, digest)
   }
 
-  if (isEmpty(derivedKey) === true) {
+  if (derivedKey === undefined) {
     throw new Error('Unsupported key derivation scheme')
   }
 

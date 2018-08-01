@@ -203,8 +203,7 @@ let methods = [
   {
     name: 'sendSignedTransaction',
     call: 'eth_sendRawTransaction',
-    params: 1,
-    inputFormatter: [null]
+    params: 1
   },
   {
     name: 'signTransaction',

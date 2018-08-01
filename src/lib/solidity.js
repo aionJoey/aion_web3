@@ -1,4 +1,4 @@
-let {isEmpty, isArray} = require('underscore')
+let {isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
 
@@ -14,17 +14,17 @@ function parseType(val) {
   let hasDimensions
   let hasDynamicDimensions
 
-  if (isEmpty(baseType) === false) {
+  if (baseType !== null) {
     baseType = baseType[1]
   }
 
-  if (isEmpty(bitLength) === false) {
+  if (bitLength !== null) {
     bitLength = parseInt(bitLength[1], 10)
   }
 
   // bytes and string are dynamic
 
-  if (isEmpty(dimensions) === false) {
+  if (dimensions !== null) {
     dimensions = dimensions.map(item => {
       let op = {}
       let digit = item.match(patterns.solidityDimensionDigit)
@@ -33,7 +33,7 @@ function parseType(val) {
       op.dynamic = item === values.solidity.dimensionsDynamic
 
       // otherwise the user specified a fixed length
-      if (isEmpty(digit) === false) {
+      if (digit !== null) {
         op.length = parseInt(digit[0], 10)
       }
 

@@ -1,4 +1,3 @@
-let {isEmpty} = require('underscore')
 let Ajv = require('ajv')
 let ajv = new Ajv()
 
@@ -22,7 +21,7 @@ function createValidator(schema) {
   return function createValidatorInner(val) {
     let valid = validator(val)
     let error
-    if (isEmpty(validator.errors) === false) {
+    if (validator.errors !== null) {
       error = parseError(validator.errors[0])
     }
     return [valid, error]

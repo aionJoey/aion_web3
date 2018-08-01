@@ -1,6 +1,5 @@
 let BN = require('bn.js')
 let padStart = require('lodash/padStart')
-let {isEmpty} = require('underscore')
 let patterns = require('./lib/patterns')
 let values = require('./lib/values')
 let {removeLeadingZeroX, prependZeroX} = require('./lib/formats')
@@ -176,7 +175,7 @@ Iban.prototype.fromBban = function(bbanAddress) {
  * @return {object}
  */
 Iban.prototype.createIndirect = function({institution, identifier}) {
-  if (isEmpty(institution) === true || isEmpty(identifier) === true) {
+  if (institution === undefined || identifier === undefined) {
     throw new Error(`createIndirect takes {institution, identifier}`)
   }
 

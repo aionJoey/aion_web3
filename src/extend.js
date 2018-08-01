@@ -8,7 +8,7 @@ rely on the context.
 
 let get = require('lodash/get')
 let set = require('lodash/set')
-let {each, isFunction, isEmpty} = require('underscore')
+let {each, isFunction} = require('underscore')
 
 // the simplest imput formatter 😉
 let simpleGetValue = val => val
@@ -36,8 +36,6 @@ function assignExtend(context, {methods = []}) {
       // batch request applies this with context
       let batch = get(this, 'batch') || false
 
-      // args = Array.from(args)
-
       if (isFunction(args[args.length - 1]) === true) {
         // the last arg is a callback
         done = args.pop()
@@ -61,7 +59,7 @@ function assignExtend(context, {methods = []}) {
       // this params is the rpc call arguments as an array
       let payload = {method, params}
 
-      if (isEmpty(transformPayload) === false) {
+      if (transformPayload !== undefined) {
         payload = transformPayload(payload)
       }
 
@@ -80,35 +78,15 @@ function assignExtend(context, {methods = []}) {
           provider.send(payload, (err, res) => {
             if (err !== null && err !== undefined) {
               // batch mode is like a promise-callback combo
-              if (batch === true && isEmpty(done) === false) {
+              if (batch === true && done !== undefined) {
                 done(err)
               }
+
               return reject(err)
             }
 
-            let {error, result} = res
+            let op = preDone(res)
 
-            if (error !== null && error !== undefined) {
-              let msg
-              if (typeof error === 'object') {
-                msg = Object.keys(error)
-                  .map(key => `${key}: ${JSON.stringify(error[key])}`)
-                  .join(',')
-              }
-
-              if (typeof error === 'string') {
-                msg = error
-              }
-
-              msg = `server error ${msg}`
-              // batch mode is like a promise-callback combo
-              if (batch === true && isEmpty(done) === false) {
-                done(err)
-              }
-              return reject(new Error(msg))
-            }
-
-            let op = preDone(result)
             // batch mode is like a promise-callback combo
             if (isFunction(done) === true) {
               done(op)
@@ -124,7 +102,8 @@ function assignExtend(context, {methods = []}) {
           return done(err)
         }
 
-        done(null, preDone(res.result))
+        let op = preDone(res)
+        done(null, op)
       })
     }
   }
