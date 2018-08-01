@@ -1,38 +1,9 @@
-/*
-
-originally what it was doing was hashing data with other libraries
-and comparing to this library's results.
-
-that's why a lot of commented. it could be removed or used.
-
-*/
-
 let utils = require('../../src/utils')
 let index = require('../../src/index')
-// let {startsWithZeroX, removeLeadingZeroX} = require('../../src/lib/formats')
 let {cases} = require('./fixtures')
 let {noop} = require('underscore')
 let BigNumber = require('bignumber.js')
 let {each} = require('underscore')
-
-// compare sha3 hash outputs with ethereum and crypto-js
-// let ethereumWeb3Utils = require('web3-utils')
-// let cryptojs = require('crypto-js')
-// let cryptojsSha3Fn = require('crypto-js/sha3')
-
-// test method: all items in array are equal
-// discussion: https://stackoverflow.com/questions/14832603/check-if-all-values-of-array-are-equal
-// let allEqual = arr => arr.every(v => v === arr[0])
-
-/*function getCryptoJsSha3(val) {
-  let op = '' + val
-  if (startsWithZeroX(val) === true) {
-    op = removeLeadingZeroX(op)
-    op = cryptojs.enc.Hex.parse(op)
-  }
-  op = cryptojsSha3Fn(op, {outputLength: 256}).toString()
-  return `0x${op}`
-}*/
 
 describe('utils', () => {
   it('web3.utils property without instantiation', () => {
@@ -187,17 +158,12 @@ describe('utils', () => {
   xit('checkAddressChecksum', () => {
     let {checkAddressChecksum} = utils
     each(cases.addresses, ({checksumAddress, validChecksum, throws}) => {
-      // console.log('checksumAddress', checksumAddress)
-      // console.log('validChecksum', validChecksum)
-
       if (throws !== undefined) {
         should.throws(() => checkAddressChecksum(checksumAddress))
         return
       }
 
       let op = checkAddressChecksum(checksumAddress)
-      // console.log('op', op)
-
       op.should.be.exactly(validChecksum)
     })
   })
@@ -206,9 +172,7 @@ describe('utils', () => {
   xit('checkAddressChecksum extended', () => {
     let {checkAddressChecksum} = utils
     each(cases.checksumAddresses, ({checksumAddress}) => {
-      // console.log('checksumAddress', checksumAddress)
       let op = checkAddressChecksum(checksumAddress)
-      // console.log('op', op)
       op.should.be.exactly(true)
     })
   })
@@ -232,10 +196,7 @@ describe('utils', () => {
   it('utf8ToHex', () => {
     let {utf8ToHex} = utils
     each(cases.utf8ToHex, ({value, expected}) => {
-      // console.log('value', value)
-      // console.log('expected', expected)
       let hex = utf8ToHex(value)
-      // console.log('hex', hex)
       hex.should.be.exactly(expected)
     })
   })
@@ -243,9 +204,6 @@ describe('utils', () => {
   it('isAddress', () => {
     let {isAddress} = utils
     each(cases.addresses, ({address, validAddress}) => {
-      // console.log('address', address)
-      // console.log('validAddress', validAddress)
-      // console.log('isAddress(address)', isAddress(address))
       isAddress(address).should.be.exactly(validAddress)
     })
   })
@@ -358,21 +316,9 @@ describe('utils', () => {
       should.throws(() => sha3(item))
     })
 
-    // these values return null
-    // each(utils.values.sha3.nulls, item => assert.equal(sha3(item), null))
-
     each(cases.sha3, ({value, expected}) => {
-      let aionSum = sha3(value)
-      // let ethereumWeb3Sum = ethereumWeb3Utils.sha3(value)
-      // let cryptojsSum = getCryptoJsSha3(value)
-      // let shasums = [aionSum, ethereumWeb3Sum, cryptojsSum]
-      // let equality = allEqual(shasums)
-      // console.log('value', value)
-      // console.log('shasums', shasums)
-      // console.log('equality', equality)
-      // console.log('aionSum', aionSum)
-      // equality.should.be.exactly(true)
-      aionSum.should.be.exactly(expected)
+      let sum = sha3(value)
+      sum.should.be.exactly(expected)
     })
 
     // a BN example was shown on ethereum web3 examples so we run it
@@ -382,12 +328,7 @@ describe('utils', () => {
   xit('soliditySha3', () => {
     let {soliditySha3} = utils
     each(cases.soliditySha3, ({values, expected, error}) => {
-      // console.log('values', values)
-      // console.log('expected', expected)
       each(values, item => {
-        // console.log('item', item)
-        // console.log('typeof item', typeof item)
-
         // throwers
         if (error === true || item.error === true) {
           should.throws(() => soliditySha3.apply(undefined, [item]))
@@ -395,8 +336,8 @@ describe('utils', () => {
         }
 
         // expected solidity sha3 hashes
-        let aionSum = soliditySha3.apply(undefined, [item])
-        aionSum.should.be.exactly(expected)
+        let sum = soliditySha3.apply(undefined, [item])
+        sum.should.be.exactly(expected)
       })
     })
   })

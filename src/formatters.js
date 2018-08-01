@@ -34,7 +34,9 @@ function inputDefaultBlockNumberFormatter(val) {
 function inputBlockNumberFormatter(val) {
   if (val === undefined) {
     return undefined
-  } else if (isPredefinedBlockNumber(val)) {
+  }
+
+  if (isPredefinedBlockNumber(val)) {
     return val
   }
 
@@ -300,9 +302,12 @@ function outputPostFormatter(post) {
 function inputAddressFormatter(addr) {
   if (iban.isValid(addr) === true && iban.isDirect(addr) === true) {
     return iban.toAddress(addr).toLowerCase()
-  } else if (isAccountAddress(addr) === true) {
+  }
+
+  if (isAccountAddress(addr) === true) {
     return prependZeroX(removeLeadingZeroX(addr.toLowerCase()))
   }
+
   throw new Error(
     'Provided address "' +
       addr +

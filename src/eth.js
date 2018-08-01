@@ -87,7 +87,9 @@ let methods = [
     name: 'getHashrate',
     call: 'eth_hashrate',
     params: 0,
-    outputFormatter: hexToNumber
+    // outputFormatter: hexToNumber
+    // originally it used the above but the RPC can return a real number
+    outputFormatter: val => parseInt(val, 10)
   },
   {
     name: 'isSyncing',

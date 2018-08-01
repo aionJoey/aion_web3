@@ -8,7 +8,9 @@ let patterns = Object.freeze({
   // positive or negative hex with 0x
   hexStrict: /^(-)?0x[0-9a-f]{1,}$/i,
   // aion-specific 0x0a
-  address: /^(0x)?a0[0-9a-f]{62}$/i,
+  // 0xa0 some addresses arent 0xa0 yet
+  // address: /^(0x)?a0[0-9a-f]{62}$/i,
+  address: /^(0x)?[0-9a-f]{64}$/i,
   // starts with utf8 null characters
   utf8Null: /^(?:\u0000)*/, // eslint-disable-line no-control-regex
   // matches solidity array types int128[64] or uint128[32]

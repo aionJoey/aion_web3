@@ -124,7 +124,6 @@ function assignExtend(context, {methods = []}) {
           return done(err)
         }
 
-        // console.log('res', res)
         done(null, preDone(res.result))
       })
     }

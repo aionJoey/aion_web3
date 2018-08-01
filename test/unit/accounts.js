@@ -68,8 +68,6 @@ describe('Accounts', () => {
     let account = accounts.create()
     let signed = account.sign(msg, account.privateKey)
     let recovery = accounts.recover(signed)
-    // console.log('account.address', account.address)
-    // console.log('recovery', recovery)
     assert.equal(equalAddresses(account.address, recovery), true)
   })
 

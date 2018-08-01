@@ -81,3 +81,12 @@ npm test
 # build for production
 npm run prd
 ```
+
+The tools will give you instant feedback about code style and unit testing. Contributors are encouraged to maintain good code coverage and try not to check in style errors.
+
+## Resources
+
++ https://aion.network
++ Aion wiki https://github.com/aionnetwork/aion/wiki
++ [./docs/guides](./docs/guides)
+
