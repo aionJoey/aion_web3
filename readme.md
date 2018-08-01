@@ -5,7 +5,7 @@ A JavaScript library for interacting with the Aion network.
 **If you're porting your Ethereum app to Aion this API is nearly identical. Minimal modifications are necessary if any.**
 
 + [Guide: Porting Ethereum web3-based app to Aion](./docs/guides/porting.md)
-+ [Alias web3 modules to aion-web3 modules in Webpack](./docs/webpack.md)
++ [Alias web3 modules to aion-web3 modules in Webpack](./docs/guides/webpack.md)
 
 ## Install
 
@@ -17,10 +17,10 @@ npm install aion-web3
 
 ```js
 let Web3 = require('aion-web3')
-let aion = new Web3('https://conquest-web3.aion.network:443')
+let web3 = new Web3('https://conquest-web3.aion.network:443')
 
 // get protocol version
-aion.eth
+web3.eth
   .getProtocolVersion()
   .then(res => {
     console.log('conquest protocol version', res)
@@ -30,7 +30,7 @@ aion.eth
   })
 
 // check current gas price
-aion.eth
+web3.eth
   .getGasPrice()
   .then(res => {
     console.log('conquest gas price', res)
@@ -40,7 +40,7 @@ aion.eth
   })
 
 // get your balance
-aion.eth
+web3.eth
   .getBalance(
     '0xa0b1b3f651990669c031866ec68a4debfece1d3ffb9015b2876eda2a9716160b'
   )
