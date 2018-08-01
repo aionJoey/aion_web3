@@ -309,7 +309,7 @@ function sha3(val) {
 // utils.keccak256 = sha3
 
 /**
- * True if valid aion account address
+ * True if valid Aion account address
  * @param {string} val
  * @return {boolean}
  */
@@ -322,7 +322,7 @@ let isAddress = val => accounts.isAccountAddress(val)
  */
 function checkAddressChecksum(val) {
   if (accounts.isAccountAddress(val) === false) {
-    throw new Error(`not a valid aion address: ${val}`)
+    throw new Error(`not a valid Aion address: ${val}`)
   }
 
   return accounts.isValidChecksumAddress(val)

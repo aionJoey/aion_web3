@@ -73,7 +73,7 @@ let addresses = [
     validChecksum: true,
     validAddress: true
   },
-  // lowercased aion addresses which are not valid checksum addresses
+  // lowercased Aion addresses which are not valid checksum addresses
   {
     address:
       '0xa0e1cca4fe786118c0abb1fdf45c04e44354f971b25c04ed77ac46f13cae179a',
@@ -90,7 +90,7 @@ let addresses = [
     validChecksum: false,
     validAddress: true
   },
-  // uppercased aion addresses which are not valid checksum addresses
+  // uppercased Aion addresses which are not valid checksum addresses
   {
     address:
       '0xa0e1cca4fe786118c0abb1fdf45c04e44354f971b25c04ed77ac46f13cae179a',

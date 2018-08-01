@@ -161,7 +161,7 @@ let soliditySha3Cases = [
       '0x5aac5a7501e071c3ee062ede777be470acb4cd05a2724146438d7e4518d91677'
   },
   {
-    // aion addresses conversion
+    // Aion addresses conversion
     values: [
       '0xA07C95cC8729a0503C5ad50eb37eC8a27cD22D65dE3BB225982Ec55201366920',
 

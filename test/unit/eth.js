@@ -11,7 +11,7 @@ describe('Eth', () => {
     eth.personal.should.be.an.Object
   })
 
-  // it's not clear to me if aion can do subscriptions yet
+  // it's not clear to me if Aion can do subscriptions yet
   xit('subscribe', () => {
     eth.subscribe()
   })

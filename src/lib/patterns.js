@@ -29,7 +29,9 @@ let patterns = Object.freeze({
   arraySizeDigit: /(?:\[)(\d+)/,
   // base64 encoding for buffers
   // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
-  base64: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+  base64: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+  // used to check against IBAN addresses ../iban.js
+  validIban: /^XE[0-9]{2}(AIO[0-9A-Z]{13}|[0-9A-Z]{30,31})$/
 })
 
 module.exports = patterns

@@ -323,7 +323,7 @@ Accounts.prototype.recoverTransaction = function(rawTx) {
 }
 
 /**
- * Hashed aion signed message with preamble
+ * Hashed Aion signed message with preamble
  * @param {string} message
  * @return {buffer} keccak256 hash
  */
@@ -357,7 +357,7 @@ Accounts.prototype.sign = function(message, privateKey) {
 }
 
 /**
- * The aion address is the first 64 bytes of the signature
+ * The Aion address is the first 64 bytes of the signature
  * @param {object|string} message
  * @param {string|buffer} signature
  * @return {string} the signing address

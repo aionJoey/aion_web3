@@ -14,7 +14,7 @@ let {
   sha3
 } = require('./utils')
 
-let Iban = require('./iban')
+let iban = require('./iban')
 
 let outputBigNumberFormatter = val => toBN(val).toString(10)
 
@@ -297,16 +297,15 @@ function outputPostFormatter(post) {
   return post
 }
 
-function inputAddressFormatter(ibanAddress) {
-  let iban = new Iban(ibanAddress)
-  if (iban.isValid() === true && iban.isDirect() === true) {
-    return iban.toAddress().toLowerCase()
-  } else if (isAccountAddress(ibanAddress) === true) {
-    return prependZeroX(removeLeadingZeroX(ibanAddress.toLowerCase()))
+function inputAddressFormatter(addr) {
+  if (iban.isValid(addr) === true && iban.isDirect(addr) === true) {
+    return iban.toAddress(addr).toLowerCase()
+  } else if (isAccountAddress(addr) === true) {
+    return prependZeroX(removeLeadingZeroX(addr.toLowerCase()))
   }
   throw new Error(
-    'Provided ibanAddress "' +
-      ibanAddress +
+    'Provided address "' +
+      addr +
       '" is invalid, the capitalization checksum test failed, or its an indrect IBAN address which can\'t be converted.'
   )
 }

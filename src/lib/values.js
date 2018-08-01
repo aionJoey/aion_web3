@@ -39,7 +39,7 @@ let values = Object.freeze({
     randomHexSize: 32
   },
   //
-  // aion solidity
+  // Aion solidity
   //
   maxIntSize: 128,
   rpc: {
@@ -51,7 +51,8 @@ let values = Object.freeze({
     // without 0x
     nonNumericLength: 64,
     // with 0x
-    numericLength: 66
+    numericLength: 66,
+    bytesLength: 32
   },
   //
   // crypto defaults
