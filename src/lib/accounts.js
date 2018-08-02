@@ -2,6 +2,7 @@ let {isString, isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
 let {blake2b256, keccak256} = require('./crypto')
+
 let {
   prependZeroX,
   removeLeadingZeroX,
@@ -25,8 +26,8 @@ function createPrivateKey(entropy) {
 let isPrivateKey = val =>
   (isArray(val) === true || Buffer.isBuffer(val) === true) && val.length > 0
 
-function createA0Address(privateKey) {
-  let pkHash = Buffer.from(blake2b256(privateKey))
+function createA0Address(publicKey) {
+  let pkHash = Buffer.from(blake2b256(publicKey))
   return Buffer.concat([values.addresses.identifier, pkHash], 32)
 }
 

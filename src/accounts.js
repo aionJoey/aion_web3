@@ -111,7 +111,7 @@ function Account({accounts, entropy, privateKey}) {
 
   // 0xAO address
   this.address = null
-  this._addressBuffer = createA0Address(this.privateKey)
+  this._addressBuffer = createA0Address(this._nacl.publicKey)
   this.address = createA0AddressString(this._addressBuffer)
 }
 
