@@ -1,9 +1,16 @@
 let utils = require('../../src/utils')
 let index = require('../../src/index')
+let {prependZeroX} = require('../../src/lib/formats')
 let {cases} = require('./fixtures')
 let {noop} = require('underscore')
 let BigNumber = require('bignumber.js')
 let {each} = require('underscore')
+
+// prepend 0x to all the test cases
+cases.checksumAddresses = cases.checksumAddresses.map(item => {
+  item.checksumAddress = prependZeroX(item.checksumAddress)
+  return item
+})
 
 describe('utils', () => {
   it('web3.utils property without instantiation', () => {
@@ -155,21 +162,18 @@ describe('utils', () => {
     bytesToHex([0, 0, 0, 234]).should.be.exactly('0x000000ea')
   })
 
-  xit('checkAddressChecksum', () => {
+  it('checkAddressChecksum ethereum address throws', () => {
     let {checkAddressChecksum} = utils
-    each(cases.addresses, ({checksumAddress, validChecksum, throws}) => {
-      if (throws !== undefined) {
-        should.throws(() => checkAddressChecksum(checksumAddress))
-        return
-      }
-
-      let op = checkAddressChecksum(checksumAddress)
-      op.should.be.exactly(validChecksum)
+    let throwers = cases.addresses
+      .filter(item => item.throws === true)
+      .map(item => item.address)
+    each(throwers, address => {
+      should.throws(() => checkAddressChecksum(address))
     })
   })
 
   // provided from qoire, cannot get it to work with bit array yet
-  xit('checkAddressChecksum extended', () => {
+  it('checkAddressChecksum extended', () => {
     let {checkAddressChecksum} = utils
     each(cases.checksumAddresses, ({checksumAddress}) => {
       let op = checkAddressChecksum(checksumAddress)
@@ -179,17 +183,23 @@ describe('utils', () => {
 
   it('toChecksumAddress', () => {
     let {toChecksumAddress, checkAddressChecksum} = utils
-    let validAddrs = cases.addresses.filter(item => item.validChecksum === true)
-    each(validAddrs, ({address /*, checksumAddress*/}) => {
-      checkAddressChecksum(toChecksumAddress(address)).should.be.exactly(true)
+    let aionAddrs = cases.addresses.filter(item => item.throws === false)
+    each(aionAddrs, ({address, validAddress}) => {
+      checkAddressChecksum(toChecksumAddress(address)).should.be.exactly(
+        validAddress
+      )
     })
   })
 
   // provided from qoire, cannot get it to work with bit array yet
-  xit('toChecksumAddress extended', () => {
+  it('toChecksumAddress extended', () => {
     let {toChecksumAddress} = utils
     each(cases.checksumAddresses, ({address, checksumAddress}) => {
-      toChecksumAddress(address).should.be.exactly(checksumAddress)
+      // console.log('address', address)
+      let csAddress = toChecksumAddress(address)
+      // console.log('csAddress', csAddress)
+      // console.log('checksumAddress', checksumAddress)
+      toChecksumAddress(csAddress).should.be.exactly(checksumAddress)
     })
   })
 
@@ -337,6 +347,8 @@ describe('utils', () => {
 
         // expected solidity sha3 hashes
         let sum = soliditySha3.apply(undefined, [item])
+
+        // console.log('sum', sum)
         sum.should.be.exactly(expected)
       })
     })

@@ -1,7 +1,7 @@
 let {isString, isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
-let {blake2b256, keccak256, nacl} = require('./crypto')
+let {blake2b256, nacl} = require('./crypto')
 
 let {
   prependZeroX,
@@ -53,21 +53,31 @@ function isAccountAddress(val) {
   return patterns.address.test(val) === true
 }
 
+function bit(arr, index) {
+  let byteOffset = Math.floor(index / 8)
+  let bitOffset = index % 8
+  let uint8 = arr[byteOffset]
+  return (uint8 >> bitOffset) & 0x1
+}
+
 function createChecksumAddress(val) {
-  let address = removeLeadingZeroX(val)
-  let addressHash = keccak256(toBuffer(address.toLowerCase())).toString('hex')
+  let address = removeLeadingZeroX(val.toLowerCase())
+  let addressHash = blake2b256(toBuffer(address))
 
   return prependZeroX(
-    addressHash
+    address
       .split('')
-      .map(item => parseInt(item, 16))
       .map((item, index) => {
         let char = address[index]
+
         if (isNaN(char) === false) {
           // numeric
           return char
         }
-        return item > 7 ? char.toUpperCase() : char.toLowerCase()
+
+        return bit(addressHash, index) === 1
+          ? char.toUpperCase()
+          : char.toLowerCase()
       })
       .join('')
   )

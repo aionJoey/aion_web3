@@ -91,8 +91,8 @@ describe('formatters', () => {
       gasPrice: '5',
       value: '6',
       from:
-        '0xa07C95cC8729A0503C5aD50Eb37Ec8A27CD22d65de3bB225982eC55201366920',
-      to: '0xa07C95cC8729A0503C5aD50Eb37Ec8A27CD22d65de3bB225982eC55201366920'
+        '0xa07C95Cc8729a0503c5ad50Eb37Ec8a27cD22D65dE3BB225982Ec55201366920',
+      to: '0xa07C95Cc8729a0503c5ad50Eb37Ec8a27cD22D65dE3BB225982Ec55201366920'
     })
   })
 
@@ -112,7 +112,7 @@ describe('formatters', () => {
       gasUsed: 4,
       logs: 5,
       contractAddress:
-        '0xa07C95cC8729A0503C5aD50Eb37Ec8A27CD22d65de3bB225982eC55201366920'
+        '0xa07C95Cc8729a0503c5ad50Eb37Ec8a27cD22D65dE3BB225982Ec55201366920'
     })
   })
 
@@ -138,7 +138,7 @@ describe('formatters', () => {
       totalDifficulty: '7',
       transactions: 8,
       miner:
-        '0xa07C95cC8729A0503C5aD50Eb37Ec8A27CD22d65de3bB225982eC55201366920'
+        '0xa07C95Cc8729a0503c5ad50Eb37Ec8a27cD22D65dE3BB225982Ec55201366920'
     })
   })
 
@@ -172,7 +172,7 @@ describe('formatters', () => {
       blockNumber: 5,
       transactionIndex: 6,
       address:
-        '0xa07C95cC8729A0503C5aD50Eb37Ec8A27CD22d65de3bB225982eC55201366920'
+        '0xa07C95Cc8729a0503c5ad50Eb37Ec8a27cD22D65dE3BB225982Ec55201366920'
     })
   })
 
@@ -210,7 +210,7 @@ describe('formatters', () => {
     })
   })
 
-  xit('inputAddressFormatter', () => {
+  it('inputAddressFormatter', () => {
     inputAddressFormatter(
       'XE7338O073KYGTWWZN0F2WZ0R8PX5ZPPZS'
     ).should.be.exactly(
