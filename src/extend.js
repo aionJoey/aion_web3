@@ -77,6 +77,10 @@ function assignExtend(context, {methods = []}) {
         return new Promise((resolve, reject) => {
           provider.send(payload, (err, res) => {
             if (err !== null && err !== undefined) {
+              // attach more info to error for the developer
+              err.args = args
+              err.payload = payload
+
               // batch mode is like a promise-callback combo
               if (batch === true && done !== undefined) {
                 done(err)
@@ -99,6 +103,9 @@ function assignExtend(context, {methods = []}) {
       // callback api
       provider.send(payload, (err, res) => {
         if (err !== null && err !== undefined) {
+          // attach more info to error for the developer
+          err.args = args
+          err.payload = payload
           return done(err)
         }
 
@@ -106,8 +113,6 @@ function assignExtend(context, {methods = []}) {
         done(null, op)
       })
     }
-
-    return
   }
 
   context.extend = ({property, methods}) => {

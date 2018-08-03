@@ -1,37 +1,49 @@
 let {isString, isArray} = require('underscore')
 let patterns = require('./patterns')
 let values = require('./values')
-let {blake2b256, keccak256} = require('./crypto')
+let {blake2b256, keccak256, nacl} = require('./crypto')
 
 let {
   prependZeroX,
   removeLeadingZeroX,
-  hexToBuffer,
   randomHexBuffer,
   Buffer,
   toBuffer
 } = require('./formats')
 
-function createPrivateKey(entropy) {
+function createKeyPair({entropy, privateKey}) {
+  let kp
+  let keyPair
+
+  if (privateKey !== undefined) {
+    kp = nacl.sign.keyPair.fromSecretKey(toBuffer(privateKey))
+    keyPair = {
+      privateKey: toBuffer(kp.secretKey),
+      publicKey: toBuffer(kp.publicKey)
+    }
+    return keyPair
+  }
+
   if (entropy === undefined) {
     entropy = randomHexBuffer()
   }
-  let pk = keccak256(Buffer.concat([randomHexBuffer(), entropy]))
-  pk = hexToBuffer(pk)
-  pk = keccak256(Buffer.concat([randomHexBuffer(), pk]))
-  pk = hexToBuffer(pk)
-  return pk
+
+  kp = nacl.sign.keyPair.fromSeed(entropy.slice(0, nacl.sign.seedLength))
+  keyPair = {
+    privateKey: toBuffer(kp.secretKey),
+    publicKey: toBuffer(kp.publicKey)
+  }
+  return keyPair
 }
 
 let isPrivateKey = val =>
   (isArray(val) === true || Buffer.isBuffer(val) === true) && val.length > 0
 
 function createA0Address(publicKey) {
-  let pkHash = Buffer.from(blake2b256(publicKey))
-  return Buffer.concat([values.addresses.identifier, pkHash], 32)
+  let pkHash = Buffer.from(blake2b256(publicKey)).slice(1, 32)
+  let address = Buffer.concat([values.addresses.identifier, pkHash], 32)
+  return prependZeroX(address.toString('hex'))
 }
-
-let createA0AddressString = val => prependZeroX(val.toString('hex'))
 
 function isAccountAddress(val) {
   if (val === undefined || isString(val) === false) {
@@ -71,10 +83,9 @@ function equalAddresses(addr1, addr2) {
 }
 
 module.exports = {
-  createPrivateKey,
+  createKeyPair,
   isPrivateKey,
   createA0Address,
-  createA0AddressString,
   isAccountAddress,
   createChecksumAddress,
   isValidChecksumAddress,

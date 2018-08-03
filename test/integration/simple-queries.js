@@ -1,7 +1,8 @@
+/*eslint-disable no-console*/
+
 let Web3 = require('../../src/index')
 let client = new Web3('http://127.0.0.1:8545')
 let {toBuffer} = require('../../src/lib/formats')
-let {sha3} = Web3.utils
 
 let methods = [
   {
@@ -213,7 +214,7 @@ describe('simple rpc queries', () => {
     client
       .eth_submitHashrate(hashRate)
       .then(res => {
-        // console.log('res', res)
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -259,14 +260,11 @@ describe('simple rpc queries', () => {
       .catch(done)
   })
 
-  let storage = ''
-
   it('eth_getStorageAt', done => {
     client.eth
       .getStorageAt(coinbase, 1)
       .then(res => {
         res.should.be.a.String
-        storage = res
         done()
       })
       .catch(done)
@@ -327,6 +325,7 @@ describe('simple rpc queries', () => {
     client
       .eth_getBlockByHash('??')
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -346,6 +345,7 @@ describe('simple rpc queries', () => {
     client.eth
       .getTransactionByHash('??')
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -355,6 +355,7 @@ describe('simple rpc queries', () => {
     client
       .eth_getTransactionByBlockHashAndIndex('??')
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -364,6 +365,7 @@ describe('simple rpc queries', () => {
     client
       .eth_getTransactionByBlockNumberAndIndex('??')
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -373,6 +375,7 @@ describe('simple rpc queries', () => {
     client.eth
       .getTransactionReceipt('??')
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)
@@ -526,6 +529,7 @@ describe('simple rpc queries', () => {
     client
       .priv_p2pConfig()
       .then(res => {
+        console.log('res', res)
         done()
       })
       .catch(done)

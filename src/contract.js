@@ -142,6 +142,6 @@ Contract.prototype.clone = function() {
   return new Contract(jsonInterface, address, options)
 }
 
-Contract.prototype.deploy = function(options, done) {}
+// Contract.prototype.deploy = function(options, done) {}
 
 module.exports = Contract

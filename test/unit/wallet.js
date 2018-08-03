@@ -1,5 +1,4 @@
 let Accounts = require('../../src/accounts')
-let {createPrivateKey} = require('../../src/lib/accounts')
 
 describe('Wallet', () => {
   let accounts
@@ -17,7 +16,7 @@ describe('Wallet', () => {
   })
 
   it('add', () => {
-    wallet.add(createPrivateKey())
+    wallet.add(accounts.create())
     wallet.should.have.length(4)
   })
 

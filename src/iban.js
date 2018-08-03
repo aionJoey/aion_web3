@@ -20,7 +20,6 @@ let {toChecksumAddress} = require('./utils')
 function iso13616Prepare(ibanAddress) {
   let A = 'A'.charCodeAt(0)
   let Z = 'Z'.charCodeAt(0)
-
   let op = ibanAddress.toUpperCase()
   op = op.substr(4) + op.substr(0, 4)
 
@@ -75,7 +74,7 @@ function ibanToAion(ibanAddress) {
     let base36 = ibanAddress.substr(4)
     let asBn = new BN(base36, 36)
     asBn = asBn.toString(16, values.addresses.bytesLength)
-    asBN = prependZeroX(asBn)
+    asBn = prependZeroX(asBn)
     return toChecksumAddress(asBn)
   }
 

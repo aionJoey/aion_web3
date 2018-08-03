@@ -26,18 +26,23 @@ describe('Accounts', () => {
     account.encrypt.should.be.a.Function
   })
 
-  // connects to a node
-  xit('signTransaction (slow)', done => {
+  it('signTransaction', done => {
     let account = accounts.create()
     let tx = {
-      gas: '50000',
-      gasLimit: '60000',
+      gas: 50000,
+      gasLimit: 60000,
+      gasPrice: 80000,
       to: account.address,
       from: account.address,
-      value: '70000',
-      data: 'test'
+      value: 90000,
+      data: 'test',
+      chainId: 0,
+      nonce: 0
     }
     account.signTransaction(tx, (err, res) => {
+      // console.log('err', err)
+      // console.log('res', res)
+
       if (err !== null && err !== undefined) {
         /* eslint-disable no-console */
         console.error('error signTransaction', err)
@@ -46,7 +51,12 @@ describe('Accounts', () => {
       }
 
       res.messageHash.should.be.a.String
-      assert.equal(isBuffer(res.rawTransaction), true)
+      res.signature.should.be.a.String
+      res.rawTransaction.should.be.a.String
+
+      res.messageHash.startsWith('0x').should.be.exactly(true)
+      res.signature.startsWith('0x').should.be.exactly(true)
+      res.rawTransaction.startsWith('0x').should.be.exactly(true)
       done()
     })
   })

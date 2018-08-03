@@ -48,14 +48,15 @@
     "dev-server": "nodemon -L -d 1 -w test/unit/fixtures/rpc.js -w test/unit/server.js test/unit/server.js || true",
     "dev-eslint": "sleep 1 && nodemon -L -d 1 -w src -w test --exec 'eslint --cache --fix src test' || true",
     "dev-mocha-unit": "sleep 2 && nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/unit' || true",
-    "xdev-mocha-integration": "sleep 3 && nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/integration' || true",
     "dev": "run-p dev-*",
     "test-eslint": "eslint --fix src test || true",
     "test-mocha-unit": "mocha --opts mocha.opts test/unit",
     "test": "run-s test-*",
     "prd-prettier": "prettier --config prettier.config.js --write './{src,test}/**/*.js'",
     "prd-webpack": "webpack --config webpack.config.js",
-    "prd": "run-s clean setup-* test-* prd-*"
+    "prd": "run-s clean setup-* test-* prd-*",
+    "integration-node-mocha": "nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/integration' || true",
+    "integration": "run-s integration-*"
   },
   "repository": {
     "type": "git",
@@ -72,12 +73,10 @@
     "jsonrpc"
   ],
   "author": "aionnetwork",
-  "authors": [
-    {
-      "name": "chris",
-      "email": "aion.6368726973@gmail.com",
-      "url": "https://github.com/aion-6368726973"
-    }
-  ],
+  "authors": [{
+    "name": "chris",
+    "email": "aion.6368726973@gmail.com",
+    "url": "https://github.com/aion-6368726973"
+  }],
   "license": "LGPL-3.0"
 }

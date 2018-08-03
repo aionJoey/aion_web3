@@ -1,6 +1,7 @@
 let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
+let numberToBn = require('number-to-bn')
 let {isFunction, isObject, find} = require('underscore')
 let rlp = require('rlp')
 
@@ -10,21 +11,20 @@ let {assignProvider} = require('./providers')
 let {
   isPrivateKey,
   createA0Address,
-  createA0AddressString,
   isAccountAddress,
-  createPrivateKey
+  createKeyPair
 } = require('./lib/accounts')
 
 let {hexToNumber, bytesToHex} = require('./utils')
 let crypto = require('./lib/crypto')
 let {keccak256, nacl, scrypt} = crypto
-let {validateTransaction} = require('./lib/transactions')
 
 let {
   toBuffer,
   equalBuffers,
   randomHexBuffer,
-  removeLeadingZeroX
+  removeLeadingZeroX,
+  prependZeroX
 } = require('./lib/formats')
 
 let values = require('./lib/values')
@@ -88,31 +88,15 @@ function Account({accounts, entropy, privateKey}) {
     )
   }
 
-  // held internally to access accounts functions
   this._accounts = accounts
+  this._seed = null
+  this.privateKey = null
 
-  // key generation entropy
-  let ent = (entropy !== undefined && toBuffer(entropy)) || randomHexBuffer()
+  let keyPair = createKeyPair({entropy, privateKey})
+  this.publicKey = keyPair.publicKey
+  this.privateKey = keyPair.privateKey
 
-  this.privateKey =
-    (privateKey !== undefined && toBuffer(privateKey)) || createPrivateKey(ent)
-
-  let kp = nacl.sign.keyPair.fromSeed(
-    this.privateKey.slice(0, nacl.sign.seedLength)
-  )
-
-  this._nacl = {
-    publicKey: toBuffer(kp.publicKey),
-    secretKey: toBuffer(kp.secretKey)
-  }
-
-  // held so we don't have to recompute
-  this._addressBuffer = null
-
-  // 0xAO address
-  this.address = null
-  this._addressBuffer = createA0Address(this._nacl.publicKey)
-  this.address = createA0AddressString(this._addressBuffer)
+  this.address = createA0Address(this.publicKey)
 }
 
 Account.prototype.signTransaction = function(tx, done) {
@@ -178,7 +162,7 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
   let accounts = this
   let account =
     this._findAccountByPk(privateKey) || new Account({accounts, privateKey})
-  // this.wallet.add(account)
+  this.wallet.add(account)
   return account
 }
 
@@ -201,11 +185,8 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   }
 
   let steps = {}
-  let account =
-    this._findAccountByPk(privateKey) || this.privateKeyToAccount(privateKey)
+  let account = this.privateKeyToAccount(privateKey)
   let transaction = Object.assign({}, signTransactionDefaults, tx)
-
-  let {_nacl} = account
 
   if (transaction.from === undefined) {
     transaction.from = account.address
@@ -233,13 +214,9 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
   function sign(res) {
     transaction = Object.assign({}, transaction, res)
-    /*let [valid, error] = validateTransaction(transaction)
 
-    if (valid === false) {
-      throw error
-    }*/
-
-    let {to, data, value, gas, gasLimit, gasPrice, nonce, chainId} = transaction
+    // how to use gasLimit?
+    let {to, data, value, gas, gasPrice, nonce, chainId} = transaction
 
     // console.log('transaction', transaction)
 
@@ -281,8 +258,10 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
     */
 
+    // temporary
+    // convert to BN, convert to hex, prepend 0x
     function rlpNum(val) {
-      return toBuffer(val).toString('hex')
+      return prependZeroX(toBuffer(numberToBn(val)).toString('hex'))
     }
 
     let rlpValues = [
@@ -290,10 +269,10 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       to.toLowerCase(),
       rlpNum(value),
       data,
-      rlpNum(Date.now().toString()),
+      rlpNum('7765693499286578785'), // temporary hard coded
       rlpNum(gas),
       rlpNum(gasPrice),
-      rlpNum(chainId || '0x1')
+      rlpNum(chainId)
     ]
 
     // console.log('rlpValues', rlpValues)
@@ -391,16 +370,15 @@ Accounts.prototype.hashMessage = function(message) {
  * @return {object} contains message, messageHash, signature
  */
 Accounts.prototype.sign = function(message, privateKey) {
-  let {address, _nacl} =
-    this._findAccountByPk(privateKey) || this.privateKeyToAccount(privateKey)
+  let {address} = this.privateKeyToAccount(privateKey)
   let messageHash = this.hashMessage(message)
-  let messageSignature = nacl.sign(toBuffer(messageHash), _nacl.secretKey)
-  /*let signature = Buffer.concat([toBuffer(address), messageSignature]).toString(
-    'hex'
-  )*/
-  let signature = Buffer.concat([_nacl.publicKey, messageSignature])
-    .slice(0, nacl.sign.publicKeyLength + nacl.sign.signatureLength)
-    .toString('hex')
+  let messageSignature = nacl.sign(toBuffer(messageHash), privateKey)
+
+  let signature = Buffer.concat(
+    [toBuffer(address), messageSignature],
+    nacl.sign.publicKeyLength + nacl.sign.signatureLength
+  ).toString('hex')
+
   return {
     message,
     messageHash,
