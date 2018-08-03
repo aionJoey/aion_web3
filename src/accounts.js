@@ -269,7 +269,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       to.toLowerCase(),
       rlpNum(value),
       data,
-      rlpNum('7765693499286578785'), // temporary hard coded
+      rlpNum(Date.now()),
       rlpNum(gas),
       rlpNum(gasPrice),
       rlpNum(chainId)
