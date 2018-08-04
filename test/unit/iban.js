@@ -1,3 +1,9 @@
+/*
+
+we don't yet have any valid or invalid data for ibans
+
+*/
+
 let Iban = require('../../src/iban')
 
 describe('Iban', () => {

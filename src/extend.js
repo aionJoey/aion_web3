@@ -24,15 +24,23 @@ function assignExtend(context, {methods = []}) {
     outputFormatter,
     transformPayload
   }) {
-    let paramCount = params
+    let methodParamCount = params
 
     return function createRpcMethodInner(...args) {
-      // let req = {}
       let done
+
+      // random request id for each request
+      let id = Math.random()
+        .toString()
+        .substring(2)
+
       let provider = context.currentProvider
-      // the method can be a function
+
+      // the method can be a function returning the rpc call
       let method = typeof call === 'function' ? call(args) : call
-      let params = []
+
+      let payloadParams = []
+
       // batch request applies this with context
       let batch = get(this, 'batch') || false
 
@@ -41,7 +49,11 @@ function assignExtend(context, {methods = []}) {
         done = args.pop()
       }
 
-      // expecting array but...
+      // let it still work if they don't define a param count
+      let paramCount = methodParamCount || args.length
+
+      // input formatters can be an array providing a function for each
+      // or just null even. when null we provide the backup formatter
       let formatters = inputFormatter || simpleGetValue
 
       // always turn it into an array even with one arg
@@ -53,11 +65,11 @@ function assignExtend(context, {methods = []}) {
         let arg = args[i] || null
         let formatter = formatters[i] || simpleGetValue
         // called in the context given to assignExtend
-        params[i] = formatter.call(context, arg)
+        payloadParams[i] = formatter.call(context, arg)
       }
 
       // this params is the rpc call arguments as an array
-      let payload = {method, params}
+      let payload = {method, params: payloadParams, id}
 
       if (transformPayload !== undefined) {
         payload = transformPayload(payload)
@@ -80,6 +92,7 @@ function assignExtend(context, {methods = []}) {
               // attach more info to error for the developer
               err.args = args
               err.payload = payload
+              err.id = id
 
               // batch mode is like a promise-callback combo
               if (batch === true && done !== undefined) {
@@ -95,12 +108,12 @@ function assignExtend(context, {methods = []}) {
             if (isFunction(done) === true) {
               done(op)
             }
+
             resolve(op)
           })
         })
       }
 
-      // callback api
       provider.send(payload, (err, res) => {
         if (err !== null && err !== undefined) {
           // attach more info to error for the developer

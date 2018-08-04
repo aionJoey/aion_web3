@@ -117,6 +117,8 @@ let soliditySha3Cases = [
         t: 'bytes'
       }
     ],
+    error: true,
+    throws: true,
     expected:
       '0xb7ecb0d74e96b792a62b4a9dad28f5b1795417a89679562178b1987e0767e009'
   },

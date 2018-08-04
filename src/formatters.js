@@ -112,7 +112,7 @@ function inputSignFormatter(data) {
   return isHexStrict(data) ? data : utf8ToHex(data)
 }
 
-function outputTransactionFormatter(tx) {
+function outputTransactionFormatter(tx = {}) {
   if (tx.blockNumber !== null) tx.blockNumber = hexToNumber(tx.blockNumber)
   if (tx.transactionIndex !== null)
     tx.transactionIndex = hexToNumber(tx.transactionIndex)

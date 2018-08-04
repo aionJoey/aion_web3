@@ -1,34 +1,30 @@
 let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
-let numberToBn = require('number-to-bn')
 let {isFunction, isObject, find} = require('underscore')
 let rlp = require('rlp')
 
 let {assignExtend} = require('./extend')
 let {assignProvider} = require('./providers')
 
-let {
-  isPrivateKey,
-  createA0Address,
-  isAccountAddress,
-  createKeyPair
-} = require('./lib/accounts')
+let {isPrivateKey, createA0Address, createKeyPair} = require('./lib/accounts')
 
-let {hexToNumber, bytesToHex} = require('./utils')
+let {hexToNumber, numberToHex, bytesToHex} = require('./utils')
+
 let crypto = require('./lib/crypto')
-let {keccak256, nacl, scrypt} = crypto
+let {keccak256, blake2b256, nacl, scrypt} = crypto
 
 let {
   toBuffer,
   equalBuffers,
   randomHexBuffer,
-  removeLeadingZeroX,
-  prependZeroX
+  removeLeadingZeroX
 } = require('./lib/formats')
 
 let values = require('./lib/values')
 let Wallet = require('./wallet')
+
+let {inputAddressFormatter, inputBlockNumberFormatter} = require('./formatters')
 
 let methods = [
   {
@@ -40,37 +36,26 @@ let methods = [
   {
     name: 'getGasPrice',
     call: 'eth_gasPrice',
-    params: 0
+    params: 0,
+    outputFormatter: hexToNumber
   },
   {
     name: 'getTransactionCount',
     call: 'eth_getTransactionCount',
     params: 2,
-    inputFormatter: [
-      function(address) {
-        if (isAccountAddress(address) === true) {
-          return address
-        } else {
-          throw new Error(
-            'Address ' +
-              address +
-              ' is not a valid address to get the "transactionCount".'
-          )
-        }
-      },
-      function() {
-        return 'latest'
-      }
-    ]
+    inputFormatter: [inputAddressFormatter, inputBlockNumberFormatter]
   }
 ]
 
-let signTransactionDefaults = {
-  chainId: values.nat.one,
-  to: values.zeroX,
-  data: values.zeroX,
-  value: values.zeroX
+// address + message signature length
+let aionPubSigLen = nacl.sign.publicKeyLength + nacl.sign.signatureLength
+
+function fromNat(val) {
+  let bn = numberToHex(val)
+  return bn === '0x0' ? '0x' : bn.length % 2 === 0 ? bn : '0x0' + bn.slice(2)
 }
+
+let getTimestamp = () => Date.now() * 1000
 
 /**
  * Account constructor
@@ -143,13 +128,23 @@ Accounts.prototype.create = function(entropy) {
   return account
 }
 
-Accounts.prototype._findAccountByPk = function(privateKey) {
+Accounts.prototype._findAccountByPrivateKey = function(privateKey) {
   return find(this.wallet, item => {
     let itemPrivateKey = get(item, 'privateKey')
     if (itemPrivateKey === undefined) {
       return false
     }
     return equalBuffers(privateKey, itemPrivateKey)
+  })
+}
+
+Accounts.prototype._findAccountByPublicKey = function(publicKey) {
+  return find(this.wallet, item => {
+    let itemPublicKey = get(item, 'publicKey')
+    if (itemPublicKey === undefined) {
+      return false
+    }
+    return equalBuffers(publicKey, itemPublicKey)
   })
 }
 
@@ -161,14 +156,13 @@ Accounts.prototype._findAccountByPk = function(privateKey) {
 Accounts.prototype.privateKeyToAccount = function(privateKey) {
   let accounts = this
   let account =
-    this._findAccountByPk(privateKey) || new Account({accounts, privateKey})
+    this._findAccountByPrivateKey(privateKey) ||
+    new Account({accounts, privateKey})
   this.wallet.add(account)
   return account
 }
 
 Accounts.prototype.signTransaction = function(tx, privateKey, done) {
-  let accounts = this
-
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
       return done(err)
@@ -184,12 +178,16 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     return signTransactionFailed(new Error('the private key was invalid'))
   }
 
+  if (tx.gas === undefined) {
+    return signTransactionFailed(new Error('tx.gas is required'))
+  }
+
   let steps = {}
-  let account = this.privateKeyToAccount(privateKey)
-  let transaction = Object.assign({}, signTransactionDefaults, tx)
+  let {address, publicKey} = this.privateKeyToAccount(privateKey)
+  let transaction = Object.assign({}, tx)
 
   if (transaction.from === undefined) {
-    transaction.from = account.address
+    transaction.from = address
   }
 
   if (transaction.chainId === undefined) {
@@ -204,21 +202,29 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
   if (transaction.nonce === undefined) {
     // get transaction count to use as nonce
-    steps.nonce = done =>
-      this.getTransactionCount(account.address, 'latest', done)
-  }
-
-  if (transaction.nonce !== undefined) {
-    transaction.nonce = transaction.nonce.toString()
+    steps.nonce = done => this.getTransactionCount(address, 'latest', done)
   }
 
   function sign(res) {
+    // apply missing requested valued over the tx
     transaction = Object.assign({}, transaction, res)
+    // transaction = inputCallFormatter(transaction)
 
     // how to use gasLimit?
-    let {to, data, value, gas, gasPrice, nonce, chainId} = transaction
+    let {
+      nonce,
+      to,
+      value,
+      data,
+      timestamp = getTimestamp(),
+      gas,
+      gasPrice,
+      chainId
+    } = transaction
 
-    // console.log('transaction', transaction)
+    if (gas === undefined) {
+      gas = gasPrice
+    }
 
     /*
 
@@ -258,76 +264,74 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
     */
 
-    // temporary
-    // convert to BN, convert to hex, prepend 0x
-    function rlpNum(val) {
-      return prependZeroX(toBuffer(numberToBn(val)).toString('hex'))
-    }
-
     let rlpValues = [
-      rlpNum(nonce),
+      fromNat(nonce),
       to.toLowerCase(),
-      rlpNum(value),
+      fromNat(value),
       data,
-      rlpNum(Date.now()),
-      rlpNum(gas),
-      rlpNum(gasPrice),
-      rlpNum(chainId)
+      fromNat(timestamp),
+      fromNat(gas),
+      fromNat(gasPrice),
+      fromNat(chainId)
     ]
 
-    // console.log('rlpValues', rlpValues)
+    rlpValues = rlpValues.map(item => {
+      if (item === undefined || item === null) {
+        return '0x'
+      }
+
+      return item
+    })
 
     let encoded = rlp.encode(rlpValues)
+    let messageHash = blake2b256(encoded)
+    let signature = nacl.sign.detached(messageHash, privateKey)
 
-    // console.log('encoded', encoded)
+    if (
+      nacl.sign.detached.verify(messageHash, signature, publicKey) === false
+    ) {
+      throw new Error(`
+      Could not verify signature.
+      address: ${address},
+      publicKey: ${publicKey.toString('hex')}
+      message: ${encoded}
+    `)
+    }
 
-    let messageHash = keccak256(encoded)
-
-    // console.log('messageHash', messageHash)
-
-    let {signature} = accounts.sign(messageHash, privateKey)
-
-    signature = toBuffer(signature)
-
-    // console.log('signature', signature)
-    // console.log('signature.length', signature.length)
+    let aionPubSig = Buffer.concat([publicKey, signature], aionPubSigLen)
 
     let rawTx = rlp.decode(encoded)
 
-    // console.log('1 rawTx', rawTx)
-    rawTx.push(signature)
-    // console.log('2 rawTx', rawTx)
+    rawTx.push(toBuffer(aionPubSig))
 
     let rawTransaction = rlp.encode(rawTx)
 
     messageHash = bytesToHex(messageHash)
-    signature = bytesToHex(signature)
+    signature = bytesToHex(aionPubSig)
     rawTransaction = bytesToHex(rawTransaction)
 
     return {
       messageHash,
       signature,
       rawTransaction
-      /*v: rawTx[6],
-      r: rawTx[7],
-      s: rawTx[8]*/
     }
   }
 
   // callback
   if (isFunction(done) === true) {
-    return parallel(steps, (err, res) => {
+    parallel(steps, (err, res) => {
       if (err !== undefined && err !== null) {
         return done(err)
       }
 
-      try {
-        let op = sign(res)
-        done(null, op)
-      } catch (e) {
-        done(e)
-      }
+      // try {
+      let op = sign(res)
+      done(null, op)
+      // } catch (e) {
+      // done(e)
+      // }
     })
+    return
   }
 
   // Promise
@@ -337,17 +341,18 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
         return reject(err)
       }
 
-      try {
-        resolve(sign(res))
-      } catch (e) {
-        reject(e)
-      }
+      // try {
+      let op = sign(res)
+      resolve(op)
+      // } catch (e) {
+      // reject(e)
+      // }
     })
   })
 }
 
 Accounts.prototype.recoverTransaction = function(rawTx) {
-  throw new Error(`recoverTransaction not yet implemented ${rawTx}`)
+  return this.recover(null, rlp.decode(rawTx).pop())
 }
 
 /**
@@ -360,7 +365,7 @@ Accounts.prototype.hashMessage = function(message) {
   let len = messageBuffer.length
   let preamble = `\x19Aion Signed Message:\n${len}`
   let preambleBuffer = toBuffer(preamble)
-  return keccak256(Buffer.concat([preambleBuffer, messageBuffer]))
+  return blake2b256(Buffer.concat([preambleBuffer, messageBuffer]))
 }
 
 /**
@@ -370,19 +375,33 @@ Accounts.prototype.hashMessage = function(message) {
  * @return {object} contains message, messageHash, signature
  */
 Accounts.prototype.sign = function(message, privateKey) {
-  let {address} = this.privateKeyToAccount(privateKey)
-  let messageHash = this.hashMessage(message)
-  let messageSignature = nacl.sign(toBuffer(messageHash), privateKey)
+  let account = this.privateKeyToAccount(privateKey)
+  let {address, publicKey} = account
+  let messageHash = blake2b256(message)
+  let signature = nacl.sign.detached(messageHash, privateKey)
 
-  let signature = Buffer.concat(
-    [toBuffer(address), messageSignature],
-    nacl.sign.publicKeyLength + nacl.sign.signatureLength
+  if (nacl.sign.detached.verify(messageHash, signature, publicKey) === false) {
+    throw new Error(`
+      Could not verify signature.
+      address: ${address},
+      publicKey: ${publicKey.toString('hex')}
+      message: ${message}
+    `)
+  }
+
+  // address + message signature
+  let aionPubSig = Buffer.concat(
+    [publicKey, toBuffer(signature)],
+    aionPubSigLen
   ).toString('hex')
+
+  messageHash = bytesToHex(messageHash)
+  aionPubSig = bytesToHex(aionPubSig)
 
   return {
     message,
-    messageHash,
-    signature
+    messageHash: messageHash,
+    signature: aionPubSig
   }
 }
 
@@ -393,9 +412,8 @@ Accounts.prototype.sign = function(message, privateKey) {
  * @return {string} the signing address
  */
 Accounts.prototype.recover = function(message, signature) {
-  return toBuffer(signature || message.signature)
-    .slice(0, 32)
-    .toString('hex')
+  let publicKey = toBuffer(signature || message.signature).slice(0, 32)
+  return createA0Address(publicKey)
 }
 
 /**

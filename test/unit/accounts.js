@@ -11,6 +11,8 @@ let password = 'test password'
 
 describe('Accounts', () => {
   let accounts
+  let signedTransactionAccount
+  let signedTransaction
 
   it('initializes', () => {
     accounts = new Accounts(testProvider)
@@ -28,6 +30,10 @@ describe('Accounts', () => {
 
   it('signTransaction', done => {
     let account = accounts.create()
+
+    // for recovery below
+    signedTransactionAccount = account.address
+
     let tx = {
       gas: 50000,
       gasLimit: 60000,
@@ -57,6 +63,9 @@ describe('Accounts', () => {
       res.messageHash.startsWith('0x').should.be.exactly(true)
       res.signature.startsWith('0x').should.be.exactly(true)
       res.rawTransaction.startsWith('0x').should.be.exactly(true)
+
+      signedTransaction = res
+
       done()
     })
   })
@@ -75,10 +84,23 @@ describe('Accounts', () => {
   })
 
   it('recover', () => {
+    // from above signTransaction
+    accounts
+      .recover(signedTransaction)
+      .should.be.exactly(signedTransactionAccount)
+
+    // and another from signing a message
     let account = accounts.create()
-    let signed = account.sign(msg, account.privateKey)
+    let {address, privateKey} = account
+    let signed = account.sign(msg, privateKey)
     let recovery = accounts.recover(signed)
-    assert.equal(equalAddresses(account.address, recovery), true)
+    assert.equal(equalAddresses(address, recovery), true)
+  })
+
+  it('recoverTransaction', () => {
+    accounts
+      .recoverTransaction(signedTransaction.rawTransaction)
+      .should.be.exactly(signedTransactionAccount)
   })
 
   xit('encrypt (scrypt, slow)', () => {

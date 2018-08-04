@@ -4,17 +4,19 @@ let Web3 = require('../../src/index')
 let client = new Web3('http://127.0.0.1:8545')
 let {toBuffer} = require('../../src/lib/formats')
 
+let hexFormatter = val => toBuffer(val).toString('hex')
+
 let methods = [
   {
     name: 'web3_sha3',
-    call: 'web3_sha3'
-    // params: 0 ??
+    call: 'web3_sha3',
+    inputFormatter: hexFormatter
   },
   {
     name: 'eth_submitHashrate',
-    call: 'eth_submitHashrate',
-    params: 1,
-    inputFormatter: val => toBuffer(val).toString('hex')
+    call: 'eth_submitHashrate'
+    // params: 1,
+    // inputFormatter: hexFormatter
   },
   {
     name: 'eth_getBlockTransactionCountByNumber',
@@ -116,12 +118,12 @@ describe('simple rpc queries', () => {
       .catch(done)
   })
 
-  xit('web3_sha3 (internal error)', done => {
+  it('web3_sha3', done => {
     client
-      .web3_sha3('0x61696f6e')
+      .web3_sha3('aion')
       .then(res => {
         res.should.be.exactly(
-          '0xc8ccc0181a855057fc3f52dd8f15852addd20cdf24bbbdd97fdfc4b4906e285c'
+          '0x898e05fa6760e34b4d78459b9b2c58838cc62a09cc26298cfce9df99d3f7d722'
         )
         done()
       })

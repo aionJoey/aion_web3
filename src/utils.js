@@ -22,7 +22,8 @@ let {
   removeLeadingZeroX,
   prependZeroX,
   startsWithZeroX,
-  copyString
+  copyString,
+  toBuffer
 } = require('./lib/formats')
 
 /**
@@ -219,7 +220,7 @@ let rightPad = padRight
  * @param {array} val bytes
  * @return {string}
  */
-let bytesToHex = val => prependZeroX(Buffer.from(val).toString('hex'))
+let bytesToHex = val => prependZeroX(toBuffer(val).toString('hex'))
 
 /**
  * Compute SHA3 256 length hash a.k.a. keccak256
