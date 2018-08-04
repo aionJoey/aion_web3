@@ -55,7 +55,7 @@ function fromNat(val) {
   return bn === '0x0' ? '0x' : bn.length % 2 === 0 ? bn : '0x0' + bn.slice(2)
 }
 
-let getTimestamp = () => Date.now() * 1000
+let getTimestamp = () => Math.floor(Date.now() / 1000)
 
 /**
  * Account constructor

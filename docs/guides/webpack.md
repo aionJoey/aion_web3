@@ -51,17 +51,17 @@ let opts = {
   //
   resolve: {
     'web3': 'aion-web3',
-    'web3-eth': 'aion-web3/eth',
-    'web3-eth-abi': 'aion-web3/abi',
-    'web3-eth-accounts': 'aion-web3/accounts',
-    'web3-eth-contract': 'aion-web3/contract',
-    'web3-eth-iban': 'aion-web3/iban',
-    'web3-eth-personal': 'aion-web3/personal',
-    'web3-net': 'aion-web3/net',
-    'web3-providers-http': 'aion-web3/http-provider',
-    'web3-providers-ipc': 'aion-web3/ipc-provider',
-    'web3-providers-ws': 'aion-web3/websocket-provider',
-    'web3-utils': 'aion-web3/utils'
+    'web3-eth': 'aion-web3/src/eth',
+    'web3-eth-abi': 'aion-web3/src/abi',
+    'web3-eth-accounts': 'aion-web3/src/accounts',
+    'web3-eth-contract': 'aion-web3/src/contract',
+    'web3-eth-iban': 'aion-web3/src/iban',
+    'web3-eth-personal': 'aion-web3/src/personal',
+    'web3-net': 'aion-web3/src/net',
+    'web3-providers-http': 'aion-web3/src/http-provider',
+    'web3-providers-ipc': 'aion-web3/src/ipc-provider',
+    'web3-providers-ws': 'aion-web3/src/websocket-provider',
+    'web3-utils': 'aion-web3/src/utils'
   },
   performance: {
     hints: false

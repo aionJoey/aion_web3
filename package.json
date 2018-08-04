@@ -2,8 +2,37 @@
   "name": "aion-web3",
   "namespace": "aion",
   "version": "1.0.0",
-  "description": "aion web3-v1.0.0-compatible api",
+  "description": "aion client with web3-v1.0.0-compatible api",
+  "homepage": "https://github.com/aionnetwork/aion_web3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aionnetwork/aion_web3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aionnetwork/aion_web3/issues"
+  },
+  "keywords": [
+    "aion",
+    "web3",
+    "json-rpc",
+    "jsonrpc"
+  ],
+  "contributors": [{
+    "name": "tcrowe",
+    "url": "https://github.com/tcrowe"
+  }, {
+    "name": "qoire",
+    "url": "https://github.com/qoire"
+  }],
+  "license": "LGPL-3.0",
   "main": "src/index.js",
+  "files": [
+    "docs",
+    "src",
+    "LICENSE",
+    "readme.md",
+    "webpack.config.js"
+  ],
   "dependencies": {
     "ajv": "^6.5.0",
     "async": "^2.6.1",
@@ -57,26 +86,5 @@
     "prd": "run-s clean setup-* test-* prd-*",
     "integration-node-mocha": "nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/integration' || true",
     "integration": "run-s integration-*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aionnetwork/aion_web3.git"
-  },
-  "homepage": "https://github.com/aionnetwork/aion_web3",
-  "bugs": {
-    "url": "https://github.com/aionnetwork/aion_web3/issues"
-  },
-  "keywords": [
-    "aion",
-    "web3",
-    "json-rpc",
-    "jsonrpc"
-  ],
-  "author": "aionnetwork",
-  "authors": [{
-    "name": "chris",
-    "email": "aion.6368726973@gmail.com",
-    "url": "https://github.com/aion-6368726973"
-  }],
-  "license": "LGPL-3.0"
+  }
 }
