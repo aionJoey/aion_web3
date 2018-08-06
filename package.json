@@ -17,13 +17,16 @@
     "json-rpc",
     "jsonrpc"
   ],
-  "contributors": [{
-    "name": "tcrowe",
-    "url": "https://github.com/tcrowe"
-  }, {
-    "name": "qoire",
-    "url": "https://github.com/qoire"
-  }],
+  "contributors": [
+    {
+      "name": "tcrowe",
+      "url": "https://github.com/tcrowe"
+    },
+    {
+      "name": "qoire",
+      "url": "https://github.com/qoire"
+    }
+  ],
   "license": "LGPL-3.0",
   "main": "src/index.js",
   "files": [
@@ -55,21 +58,24 @@
     "ws": "^6.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0-beta.56",
     "@babel/parser": "^7.0.0-beta.55",
-    "babel-loader": "^7.1.5",
+    "@babel/preset-env": "^7.0.0-beta.56",
+    "JSONSelect": "^0.4.0",
+    "babel-loader": "^8.0.0-beta.4",
     "body-parser": "^1.18.2",
     "eslint": "5.1.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.6.2",
     "express": "^4.16.3",
-    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "nodemon": "^1.18.2",
     "npm-run-all": "^4.1.3",
+    "nyc": "^12.0.2",
     "prettier": "^1.13.7",
     "should": "^13.2.1",
-    "webpack-cli": "^3.0.8",
-    "webpack": "^4.16.1"
+    "webpack": "^4.16.1",
+    "webpack-cli": "^3.0.8"
   },
   "scripts": {
     "clean": "rm -rf dist .eslintcache",
@@ -81,10 +87,11 @@
     "test-eslint": "eslint --fix src test || true",
     "test-mocha-unit": "mocha --opts mocha.opts test/unit",
     "test": "run-s test-*",
+    "coverage": "nyc --reporter=html --reporter=json --report-dir=coverage --include=src --preserve-comments --instrument npm test",
+    "integration-node-mocha": "nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/integration' || true",
+    "integration": "run-s integration-*",
     "prd-prettier": "prettier --config prettier.config.js --write './{src,test}/**/*.js'",
     "prd-webpack": "webpack --config webpack.config.js",
-    "prd": "run-s clean setup-* test-* prd-*",
-    "integration-node-mocha": "nodemon -L -d 2 -w src -w test --exec 'mocha --opts mocha.opts test/integration' || true",
-    "integration": "run-s integration-*"
+    "prd": "run-s clean setup-* test-* prd-*"
   }
 }

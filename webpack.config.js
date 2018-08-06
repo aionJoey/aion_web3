@@ -30,6 +30,15 @@ let opts = {
     path: outputPath,
     filename: 'aion-web3.min.js'
   },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        options: {presets: ['@babel/preset-env']}
+      }
+    ]
+  },
   watch: false,
   cache: dev,
   performance: {
