@@ -2,11 +2,14 @@ node_modules
 *.sublime-*
 .eslintcache
 
+# istanbul nyc
+.nyc_output
+coverage
+
 # before we goto production take this out
 dist
 
 # temporary files
 tmp*
 backup
-tools
 todo.md
