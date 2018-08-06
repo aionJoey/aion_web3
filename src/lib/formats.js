@@ -18,16 +18,14 @@ let startsWithZeroX = val =>
 
 /**
  * Removes '0x' from a string
- * @private
  * @param {string} val
- * @return {string}checkAddressChecksum
+ * @return {string} checkAddressChecksum
  */
 let removeLeadingZeroX = val =>
   startsWithZeroX(val) === true ? val.replace(patterns.zeroX, '') : val
 
 /**
  * Put the 0x at the beginning of a string
- * @private
  * @param {string} val
  * @return {string}
  */
@@ -36,8 +34,8 @@ let prependZeroX = val =>
 
 /**
  * Strips '0x' and turns it into a Buffer
- * @param {string} val [description]
- * @return {buffer} [description]
+ * @param {string} val
+ * @return {buffer}
  */
 let hexToBuffer = val => toBuffer(val)
 

@@ -101,6 +101,7 @@ Account.prototype.encrypt = function(password, options) {
 
 /**
  * Accounts constructor
+ * @constructor Accounts
  */
 function Accounts(provider, providerOpts) {
   assignProvider(this, {provider, providerOpts})
@@ -150,8 +151,10 @@ Accounts.prototype._findAccountByPublicKey = function(publicKey) {
 
 /**
  * Get an account by providing a private key
+ * @instance
+ * @method privateKeyToAccount
  * @param {object} privateKey hex buffer or string
- * @return {object} [description]
+ * @return {object}
  */
 Accounts.prototype.privateKeyToAccount = function(privateKey) {
   let accounts = this
@@ -162,6 +165,27 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
   return account
 }
 
+/**
+ * Sign a transaction object with a private key.
+ *
+ * The timestamp is specific to Aion. It's calculated automatically
+ * from `Math.floor(Date.now() / 1000)`.
+ *
+ * @instance
+ * @method signTransaction
+ * @param {object} tx
+ * @param {number} [tx.nonce]
+ * @param {string} [tx.to]
+ * @param {number} [tx.value]
+ * @param {buffer} [tx.data]
+ * @param {number} [tx.timestamp]
+ * @param {number} tx.gas
+ * @param {number} [tx.gasPrice]
+ * @param {number} [tx.chainId]
+ * @param {buffer} privateKey
+ * @param {function} done
+ * @returns {[type]}
+ */
 Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
@@ -185,10 +209,6 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   let steps = {}
   let {address, publicKey} = this.privateKeyToAccount(privateKey)
   let transaction = Object.assign({}, tx)
-
-  if (transaction.from === undefined) {
-    transaction.from = address
-  }
 
   if (transaction.chainId === undefined) {
     // get chain id
@@ -351,12 +371,21 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   })
 }
 
+/**
+ * Given a signature it will recover the Aion address.
+ * @instance
+ * @method recoverTransaction
+ * @param {string} rawTx
+ * @returns {string}
+ */
 Accounts.prototype.recoverTransaction = function(rawTx) {
   return this.recover(null, rlp.decode(rawTx).pop())
 }
 
 /**
  * Hashed Aion signed message with preamble
+ * @instance
+ * @method hashMessage
  * @param {string} message
  * @return {buffer} keccak256 hash
  */
@@ -370,6 +399,8 @@ Accounts.prototype.hashMessage = function(message) {
 
 /**
  * Sign the message with account address and message signature
+ * @instance
+ * @method sign
  * @param {string} message
  * @param {buffer} privateKey
  * @return {object} contains message, messageHash, signature
@@ -407,6 +438,8 @@ Accounts.prototype.sign = function(message, privateKey) {
 
 /**
  * The Aion address is the first 64 bytes of the signature
+ * @instance
+ * @method recover
  * @param {object|string} message
  * @param {string|buffer} signature
  * @return {string} the signing address
@@ -418,6 +451,8 @@ Accounts.prototype.recover = function(message, signature) {
 
 /**
  * Encrypt an account to keystore v3 format
+ * @instance
+ * @method encrypt
  * @param {buffer} privateKey
  * @param {string|Buffer} password
  * @param {object} options
@@ -432,7 +467,7 @@ Accounts.prototype.recover = function(message, signature) {
  * @param {function} [options.scryptProgress] arguments (current, total, percent)
  * @param {number} [options.cipher] algorithm
  * @param {number} [options.uuid] random bytes for id
- * @return {object} [description]
+ * @return {object}
  */
 Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
   if (privateKey === undefined) {
@@ -526,6 +561,15 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
   }
 }
 
+/**
+ * Decrypt the keystorev3 object
+ * @instance
+ * @method decrypt
+ * @param {[type]} ksv3
+ * @param {[type]} password
+ * @param {[type]} nonStrict
+ * @returns {[type]}
+ */
 Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
   if (password === undefined) {
     throw new Error('No password given.')

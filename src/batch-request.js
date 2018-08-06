@@ -1,13 +1,28 @@
 let series = require('async/series')
 
+/**
+ * @constructor BatchRequest
+ */
 function BatchRequest() {
   this.steps = []
 }
 
+/**
+ * Add an RPC call to the queue
+ * @instance
+ * @method add
+ * @param {object} step
+ */
 BatchRequest.prototype.add = function(step) {
   this.steps.push(step)
 }
 
+/**
+ * Execute the RPC calls
+ * @instance
+ * @method execute
+ * @returns {object}
+ */
 BatchRequest.prototype.execute = function() {
   let context = Object.assign({}, this.constructor, {batch: true})
 

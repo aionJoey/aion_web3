@@ -51,8 +51,10 @@ let soliditySha3Cases = [
       {v: new BN('2345676856'), t: 'uint128'},
       {v: '2345676856', t: 'uint'}
     ],
+    /*expected:
+      '0xf490de2920c8a35fabeb13208852aa28c76f9be9b03a4dd2b3c075f7a26923b4'*/
     expected:
-      '0xf490de2920c8a35fabeb13208852aa28c76f9be9b03a4dd2b3c075f7a26923b4'
+      '0x9fbc5b7fd4002ba1c955d332796eb781b1088a47af4a6719b4495593aa55709b'
   },
   {
     values: [
@@ -62,8 +64,10 @@ let soliditySha3Cases = [
       {v: '2342342342342342342345676856', t: 'uint128'},
       {v: '2342342342342342342345676856', t: 'uint'}
     ],
+    /*expected:
+      '0x8ac2efaaee0058e1f1fbcb59643f6799c31c27096a347651e40f98daf1905094'*/
     expected:
-      '0x8ac2efaaee0058e1f1fbcb59643f6799c31c27096a347651e40f98daf1905094'
+      '0x7cc2b121f822f67a5df063319c72f6933cb84dfe9e74cbf9357f0241310471c6'
     // 5
   },
   {
@@ -96,8 +100,10 @@ let soliditySha3Cases = [
   },
   {
     values: [{v: '3435454256', t: 'uint128'}],
+    /*expected:
+      '0x89e0942df3602c010e0252becbbe1b4053bd4a871a021c02d8ab9878f1194b6b'*/
     expected:
-      '0x89e0942df3602c010e0252becbbe1b4053bd4a871a021c02d8ab9878f1194b6b'
+      '0x3e04e9d15760cfc79b59af44dfac0a687a938fdc3e6833e11047676052135a99'
     // 11
   },
   {
@@ -117,8 +123,7 @@ let soliditySha3Cases = [
         t: 'bytes'
       }
     ],
-    error: true,
-    throws: true,
+    // error: true,
     expected:
       '0xb7ecb0d74e96b792a62b4a9dad28f5b1795417a89679562178b1987e0767e009'
   },
@@ -131,8 +136,10 @@ let soliditySha3Cases = [
       {v: '-3435454256', t: 'int'},
       {v: '-3435454256', t: 'int128'}
     ],
+    /*expected:
+      '0x858d68fc4ad9f80dc5ee9571c7076298f8139d1d111e0955426de9381b10a061'*/
     expected:
-      '0x858d68fc4ad9f80dc5ee9571c7076298f8139d1d111e0955426de9381b10a061'
+      '0xf83adf12476fa4ca78559f1ce60a4cce310a970252d13b7bdda8701fbeee7f87'
     // 13
   },
   {
@@ -200,8 +207,10 @@ let soliditySha3Cases = [
   },
   {
     values: [{v: '36', t: 'int128'}],
+    /*expected:
+      '0x7cd332d19b93bcabe3cce7ca0c18a052f57e5fd03b4758a09f30f5ddc4b22ec4'*/
     expected:
-      '0x7cd332d19b93bcabe3cce7ca0c18a052f57e5fd03b4758a09f30f5ddc4b22ec4'
+      '0x9f3d5d3bad43bc49c119b1e403d19dc8c5ca0d7a5829a0f47f29f7230992e917'
   },
   {
     values: [
@@ -211,8 +220,10 @@ let soliditySha3Cases = [
       {v: [new BN('-12'), new BN('243')], t: 'int128[]'},
       {v: ['-12', '243'], t: 'int128[2]'}
     ],
+    /*expected:
+      '0xa9805b78a6ec1d71c3722498d521fde9d3913c92360e3aed06a9403db25f0351'*/
     expected:
-      '0xa9805b78a6ec1d71c3722498d521fde9d3913c92360e3aed06a9403db25f0351'
+      '0x33eed28a81fe95d4dd9a849467ff20bc89d30d042e03923629b72d0bdd501c36'
   },
   {
     values: [
@@ -223,8 +234,10 @@ let soliditySha3Cases = [
       {v: ['12', '243'], t: 'uint128[2]'},
       {error: true, v: ['12', '243'], t: 'uint128[1]'}
     ],
+    /*expected:
+      '0x74282b2d1a7a1a70af6f3a43ab576cd6feeaa6ebaa5fb2033b90d5942bf48a60'*/
     expected:
-      '0x74282b2d1a7a1a70af6f3a43ab576cd6feeaa6ebaa5fb2033b90d5942bf48a60'
+      '0x11f7ef838e7a3db393b0f54670b4d92b76517f9fd9fe45ba2c9f430072624cf1'
   },
   {
     values: [{v: ['0x234656', '0x23434234234ffff456'], t: 'bytes32[]'}],
@@ -277,8 +290,10 @@ let soliditySha3Cases = [
   },
   {
     values: [{v: 0, t: 'uint'}],
+    /*expected:
+      '0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563'*/
     expected:
-      '0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563'
+      '0xf490de2920c8a35fabeb13208852aa28c76f9be9b03a4dd2b3c075f7a26923b4'
   },
   {
     error: true,

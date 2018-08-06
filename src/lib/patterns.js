@@ -2,7 +2,8 @@ let patterns = Object.freeze({
   // starts with '0x'
   zeroX: /^0x/i,
   // starts with 0x or -0x
-  zeroXNegative: /^(-)?0x/i,
+  // zeroXNegative: /^(-)?0x/i,
+  zeroXNegative: /^-0x/i,
   // positive or negative hex with optional 0x
   hex: /^(-0x|0x)?[0-9a-f]{1,}$/i,
   // positive or negative hex with 0x
@@ -15,7 +16,7 @@ let patterns = Object.freeze({
   utf8Null: /^(?:\u0000)*/, // eslint-disable-line no-control-regex
   // matches solidity array types int128[64] or uint128[32]
   // captures array length
-  typeNArray: /^\D{3,}\d{1,}\[(\d+)\]$/,
+  typeNArray: /^\D{3,}(?:\d{1,})?\[(\d+)\]$/,
   // match int128 or uint128
   // captures byte size
   typeN: /^\D+(\d+).*$/,

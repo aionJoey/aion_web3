@@ -279,6 +279,12 @@ let methods = [
   }
 ]
 
+/**
+ * Work with the Eth-like web3 interface for Aion
+ * @constructor Eth
+ * @param {object} provider
+ * @param {object} providerOpts
+ */
 function Eth(provider, providerOpts) {
   this._subscriptions = []
 
@@ -294,8 +300,25 @@ function Eth(provider, providerOpts) {
   this.accounts = new Accounts()
 }
 
+/**
+ * Instantiate Iban objects from Eth
+ * @instance
+ * @type {function}
+ */
 Eth.prototype.Iban = Iban
+
+/**
+ * Create Contract instances from Eth
+ * @instance
+ * @type {function}
+ */
 Eth.prototype.Contract = Contract
+
+/**
+ * Create BatchRequest instance
+ * @instance
+ * @type {function}
+ */
 Eth.prototype.BatchRequest = BatchRequest
 
 /**
@@ -312,6 +335,9 @@ Eth.prototype.BatchRequest = BatchRequest
  * + change, object
  * + error, Error
  *
+ * @instance
+ * @deprecated one
+ * @method subscribe
  * @param {string} evtName event name
  * @param {object} [opts]
  * @param {number} opts.fromBlock
@@ -355,6 +381,9 @@ Eth.prototype.subscribe = function(evtName, opts, done) {
 
 /**
  * Unsubscribe on this instance of Eth
+ *
+ * @instance
+ * @method clearSubscriptions
  * @param {boolean} keepSyncing clear all except syncing
  * @return {boolean}
  */

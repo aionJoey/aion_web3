@@ -101,7 +101,6 @@ let isHexStrict = val =>
 /**
  * Reduce function for hexToBytes. It splits by each two characters.
  * e.g. ['ff', 'aa', 'f5', '55']
- * @private
  * @return {array} array of hex bytes
  */
 function hexToBytesReduction(acm, item, index, arr) {
@@ -299,7 +298,7 @@ let isAddress = val => accounts.isAccountAddress(val)
 /**
  * Returns true if the address checksum calculates correctly
  * @param {string} val
- * @return {boolean} [description]
+ * @return {boolean}
  */
 function checkAddressChecksum(val) {
   if (accounts.isAccountAddress(val) === false) {
@@ -528,7 +527,7 @@ function solidityPack(type, value, arraySize) {
     num = parseNumber(value)
     if (num.bitLength() > size) {
       throw new Error(
-        'Supplied uint exceeds width: ' + size + ' vs ' + num.bitLength()
+        'Supplied uint exceeds bit length: ' + size + ' vs ' + num.bitLength()
       )
     }
 
@@ -548,9 +547,10 @@ function solidityPack(type, value, arraySize) {
     }
 
     num = parseNumber(value)
+
     if (num.bitLength() > size) {
       throw new Error(
-        'Supplied int exceeds width: ' + size + ' vs ' + num.bitLength()
+        'Supplied int exceeds bit length: ' + size + ' vs ' + num.bitLength()
       )
     }
 
@@ -590,6 +590,12 @@ function soliditySortArg(item) {
     type = item.type || item.t
     value = item.value || item.v
   } else {
+    /*
+
+    this is a risky type inference and it turns utils.toHex into a complex
+    function converting to hex in one instance and returning types in another.
+
+    */
     type = toHex(item, true)
     value = toHex(item)
 
@@ -599,11 +605,27 @@ function soliditySortArg(item) {
   }
 
   if (
-    (type.startsWith('int') === true || type.startsWith('uint') === true) &&
-    typeof value === 'string' &&
-    patterns.zeroXNegative.test(value) === false
+    type === 'bytes' &&
+    isString(value) === true &&
+    startsWithZeroX(value) === true &&
+    removeLeadingZeroX(value).length % 2 !== 0
   ) {
-    value = new BN(value)
+    throw new Error(`
+      soliditySha3 was expecting to get or convert to hex. This value's hex
+      byte length was incorrect.
+      type: ${type}
+      value: ${value}
+    `)
+  }
+
+  if (
+    isArray(value) === false &&
+    (type === 'int' ||
+      type === 'uint' ||
+      type.startsWith('int') === true ||
+      type.startsWith('uint') === true)
+  ) {
+    value = numberToBn(value)
   }
 
   // get the array size
@@ -633,16 +655,10 @@ function soliditySortArg(item) {
 /**
  * Converts all the arguments into some other format then hashes it with sha3.
  * @param args captures all arguments
- * @return {string} [description]
+ * @return {string}
  */
-function soliditySha3() {
-  return sha3(
-    prependZeroX(
-      Array.from(arguments)
-        .map(soliditySortArg)
-        .join('')
-    )
-  )
+function soliditySha3(...args) {
+  return sha3(prependZeroX(args.map(soliditySortArg).join('')))
 }
 
 /**

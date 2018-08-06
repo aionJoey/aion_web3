@@ -74,6 +74,13 @@ ContractMethod.prototype.encodeABI = function(params) {
   return abi.encodeFunctionCall(this._contract.options.jsonInterface, params)
 }
 
+/**
+ * An object that facilitates working with smart contracts
+ * @constructor Contract
+ * @param {object} jsonInterface
+ * @param {string} address
+ * @param {object} options
+ */
 function Contract(jsonInterface, address, options) {
   let contract = this
 
@@ -136,6 +143,12 @@ function Contract(jsonInterface, address, options) {
 
 Contract.prototype = Object.create(EventEmitter.prototype)
 
+/**
+ * Copy the Contract object
+ * @instance
+ * @method clone
+ * @returns {object}
+ */
 Contract.prototype.clone = function() {
   let {options} = this
   let {jsonInterface, address} = options

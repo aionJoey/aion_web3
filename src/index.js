@@ -29,6 +29,8 @@ function Web3(provider, providerOpts = {}) {
   this.BatchRequest = BatchRequest
   this.utils = utils
 
+  this.personal = new Personal(this.currentProvider)
+
   Object.defineProperty(this, 'bzz', {
     get: function() {
       throw new Error(`aion doesn't implement bzz`)

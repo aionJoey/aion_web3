@@ -92,6 +92,7 @@
     "integration": "run-s integration-*",
     "prd-prettier": "prettier --config prettier.config.js --write './{src,test}/**/*.js'",
     "prd-webpack": "webpack --config webpack.config.js",
+    "prd-docs": "node tools/docgen/index.js",
     "prd": "run-s clean setup-* test-* prd-*"
   }
 }

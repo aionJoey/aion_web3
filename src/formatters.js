@@ -16,21 +16,47 @@ let {
 
 let iban = require('./iban')
 
+/**
+ * Takes an input and outputs a BN object
+ * @method outputBigNumberFormatter
+ * @param {object} val
+ * @returns {object}
+ */
 let outputBigNumberFormatter = val => toBN(val).toString(10)
 
+/**
+ * True if value if `latest`, `pending`, or `earliest`
+ * @method isPredefinedBlockNumber
+ * @param {string} val
+ * @returns {boolean}
+ */
 let isPredefinedBlockNumber = val =>
   val === 'latest' || val === 'pending' || val === 'earliest'
 
+/**
+ * Returns the block number hex string, 0x0 for earliest, or `latest`
+ * @method inputDefaultBlockNumberFormatter
+ * @param {number} val
+ * @returns {string}
+ */
 function inputDefaultBlockNumberFormatter(val) {
-  if (this && (val === undefined || val === null)) {
-    return this.defaultBlock
+  if (val === undefined || val === null) {
+    return 'latest'
   }
+
   if (val === 'genesis' || val === 'earliest') {
     return '0x0'
   }
+
   return inputBlockNumberFormatter(val)
 }
 
+/**
+ * Convert to the hex number string
+ * @method inputBlockNumberFormatter
+ * @param {number} val
+ * @returns {string}
+ */
 function inputBlockNumberFormatter(val) {
   if (val === undefined) {
     return undefined

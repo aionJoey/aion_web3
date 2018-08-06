@@ -335,10 +335,12 @@ describe('utils', () => {
     sha3('234').should.be.exactly(sha3(new BN('234')))
   })
 
-  xit('soliditySha3', () => {
+  it('soliditySha3', () => {
     let {soliditySha3} = utils
     each(cases.soliditySha3, ({values, expected, error}) => {
       each(values, item => {
+        // console.log('item', item)
+
         // throwers
         if (error === true || item.error === true) {
           should.throws(() => soliditySha3.apply(undefined, [item]))
@@ -356,6 +358,9 @@ describe('utils', () => {
 
   it('blake2b256', () => {
     let {blake2b256} = utils
-    blake2b256('aion')
+    let op = blake2b256('aion')
+    op.should.be.exactly(
+      '0xf9f384f6145675ccb7a7379f96f2e21ec92b4341605046eeb70f0b30ed42d31b'
+    )
   })
 })

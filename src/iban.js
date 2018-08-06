@@ -13,7 +13,6 @@ let {toChecksumAddress} = require('./utils')
  *
  * https://www.iso.org/standard/41031.html
  *
- * @method iso13616Prepare
  * @param {string} iban the IBAN
  * @returns {string} the prepared IBAN
  */
@@ -44,7 +43,6 @@ function iso13616Prepare(ibanAddress) {
  * https://en.wikipedia.org/wiki/ISO_7064
  * https://www.iso.org/standard/31531.html
  *
- * @method mod9710
  * @param {string} ibanAddress
  * @returns {number}
  */
@@ -61,14 +59,29 @@ function mod9710(ibanAddress) {
   return parseInt(remainder, 10) % 97
 }
 
+/**
+ * IBAN is direct
+ * @param {string} address
+ * @return {boolean}
+ */
 function isDirectIbanAddress({length}) {
   return length === 34 || length === 35
 }
 
+/**
+ * IBAN is indirect
+ * @param {string} address
+ * @return {boolean}
+ */
 function isIndirectIbanAddress({length}) {
   return length === 20
 }
 
+/**
+ * Convert IBAN to Aion address
+ * @param {string} ibanAddress
+ * @return {string}
+ */
 function ibanToAion(ibanAddress) {
   if (isDirectIbanAddress(ibanAddress) === true) {
     let base36 = ibanAddress.substr(4)
@@ -81,6 +94,11 @@ function ibanToAion(ibanAddress) {
   return ''
 }
 
+/**
+ * Convert BBAN to IBAN
+ * @param {string} bbanAddress
+ * @return {string}
+ */
 function bbanToIban(bbanAddress) {
   let countryCode = 'XE'
   let remainder = mod9710(iso13616Prepare(countryCode + '00' + bbanAddress))
@@ -105,6 +123,11 @@ function aionToIban(aionAddress) {
   return bbanToIban(padded.toUpperCase())
 }
 
+/**
+ * True if valid IBAN address
+ * @param {string} ibanAddress
+ * @return {boolean}
+ */
 function isValidIbanAddress(ibanAddress) {
   return patterns.validIban.test(ibanAddress) === true
 }
@@ -130,8 +153,8 @@ Iban instance members
 
 /**
  * Convert IBAN to Aion address
- * @param {[type]} ibanAddress [description]
- * @return {[type]} [description]
+ * @param {[type]} ibanAddress
+ * @return {[type]}
  */
 Iban.prototype.toAddress = function(ibanAddress) {
   return ibanToAion(ibanAddress || this._ibanAddress)
@@ -211,7 +234,7 @@ Iban.prototype.isIndirect = function(ibanAddress) {
 /**
  * Output checksum address
  * @param {string} [ibanAddress]
- * @return {string} [description]
+ * @return {string}
  */
 Iban.prototype.checksum = function(ibanAddress) {
   return ibanAddressChecksum(ibanAddress || this._ibanAddress)
@@ -227,7 +250,7 @@ Iban.prototype.institution = function() {
 
 /**
  * Get the client part of the address
- * @return {string} [description]
+ * @return {string}
  */
 Iban.prototype.client = function() {
   return this.isIndirect() === true ? this._ibanAddress.substr(11) : ''
@@ -235,7 +258,7 @@ Iban.prototype.client = function() {
 
 /**
  * Get the IBAN address
- * @return {string} [description]
+ * @return {string}
  */
 Iban.prototype.toString = function() {
   return this._ibanAddress

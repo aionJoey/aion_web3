@@ -1,3 +1,9 @@
+/**
+ * @module  abi
+ *
+ *
+ */
+
 let padStart = require('lodash/padStart')
 let padEnd = require('lodash/padEnd')
 let {isString, isObject, isArray, isNumber} = require('underscore')
@@ -39,10 +45,22 @@ function fnHashBuffer(val) {
   return keccak256(op).slice(0, values.solidity.types.function.byteLength)
 }
 
+/**
+ * Pad left or right depending on direction
+ * @param {string} direction left or right
+ * @param {number} length
+ * @param {string} val
+ * @return {string}
+ */
 let abiPad = (direction, length, val) => {
   return (direction === 'left' ? padStart : padEnd)(val, length, '0')
 }
 
+/**
+ * Encode padded ABI string value
+ * @param {string} val
+ * @return {string} hex
+ */
 function encodeAbiString(val) {
   let buf = toBuffer(val)
   let bufLen = buf.length
@@ -56,6 +74,11 @@ function encodeAbiString(val) {
   return lenOp + valOp
 }
 
+/**
+ * Encode padded boolean to ABI format
+ * @param {boolean} val
+ * @return {string}
+ */
 function encodeAbiBoolean(val) {
   return copyString(
     val === true
@@ -64,6 +87,11 @@ function encodeAbiBoolean(val) {
   )
 }
 
+/**
+ * A padded ABI formatted number
+ * @param {number} val
+ * @return {string}
+ */
 function encodeAbiNumber(val) {
   return abiPad(
     values.solidity.types.uint.pad,
@@ -72,10 +100,16 @@ function encodeAbiNumber(val) {
   )
 }
 
+/**
+ * ABI encoded Aion address
+ * @param {string} val
+ * @return {string}
+ */
 function encodeAbiAddress(val) {
   return removeLeadingZeroX(val)
 }
 
+// replaces the need for switch case
 let abiTypeEncoders = {
   string: encodeAbiString,
   bytes: encodeAbiString,
@@ -89,6 +123,7 @@ let abiTypeEncoders = {
 
 /**
  * Encode event to its ABI signature
+ * @method encodeEventSignature
  * @param {string|object} val
  * @return {string}
  */
@@ -98,6 +133,7 @@ function encodeEventSignature(val) {
 
 /**
  * Encode function to its ABI signature
+ * @method encodeFunctionSignature
  * @param {string|object} val
  * @return {string}
  */
@@ -109,10 +145,32 @@ function encodeFunctionSignature(val) {
   )
 }
 
+/**
+ * Array reducer summing up all the items
+ * @param {number} op accumulator
+ * @param {number} item
+ * @return {number}
+ */
 let sumLengthReduction = (op, item) => (op = op + item.length)
 
+/**
+ * Input an array of strings and calculate the length in bytes
+ * @param {array} val
+ * @return {number}
+ */
 let stringArrayByteLength = val => val.reduce(sumLengthReduction, 0) / 2
 
+/**
+ * Converts from arrays of types and params into a data structure
+ *
+ * It's used by other functions in this module to build ABI encoding and
+ * to give better information if the developer is curious to know
+ * each line of bytes.
+ *
+ * @param {array} options.types
+ * @param {array} options.params
+ * @return {object}
+ */
 function encodeParametersIntermediate({types, params}) {
   let parsedTypes = types.map(solidity.parseType)
 
@@ -187,6 +245,7 @@ function encodeParametersIntermediate({types, params}) {
 
 /**
  * Encode a list of parameters to ABI signature
+ * @method encodeParameters
  * @param {array} types
  * @param {array} params
  * @return {string}
@@ -201,6 +260,7 @@ function encodeParameters(types, params) {
 
 /**
  * Encode parameter to ABI signature
+ * @method encodeParameter
  * @param {string} type
  * @param {string|array|object} param
  * @return {string}
@@ -211,6 +271,7 @@ function encodeParameter(type, param) {
 
 /**
  * Encode function call to ABI signature
+ * @method encodeFunctionCall
  * @param {object} jsonInterface
  * @param {array} params
  * @return {string}
@@ -256,9 +317,10 @@ let abiTypeDecodes = {
 
 /**
  * Decode the parameters hex into an array of decoded values
+ * @method decodeParameters
  * @param {array} types
  * @param {string} val
- * @return {array} [description]
+ * @return {array}
  */
 function decodeParameters(types, val) {
   let typeList = []
@@ -395,6 +457,7 @@ function decodeParameters(types, val) {
 
 /**
  * Decode a parameter value from it's ABI encoding
+ * @method decodeParameter
  * @param {string} type
  * @param {string} val
  * @return {string}
@@ -405,6 +468,7 @@ function decodeParameter(type, val) {
 
 /**
  * ABI decoded log data
+ * @method decodeLog
  * @param {array} inputs
  * @param {string} val
  * @param {array} topics

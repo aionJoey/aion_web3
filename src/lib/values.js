@@ -113,22 +113,26 @@ let values = Object.freeze({
       uint: {
         pad: 'left',
         byteLength: 16,
-        stringLength: 32
+        stringLength: 32,
+        numeric: true
       },
       int: {
         pad: 'left',
         byteLength: 16,
-        stringLength: 32
+        stringLength: 32,
+        numeric: true
       },
       fixed: {
         pad: 'left',
         byteLength: 16,
-        stringLength: 32
+        stringLength: 32,
+        numeric: true
       },
       ufixed: {
         pad: 'left',
         byteLength: 16,
-        stringLength: 32
+        stringLength: 32,
+        numeric: true
       },
       address: {
         // acts as uint256
@@ -149,7 +153,8 @@ let values = Object.freeze({
         byteLength: 16,
         stringLength: 32
       }
-    }
+    },
+    numericTypes: ['uint', 'int', 'fixed', 'ufixed']
   }
 })
 
