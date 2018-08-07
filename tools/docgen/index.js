@@ -220,10 +220,11 @@ function outputMarkdown({srcList, refine}, done) {
     let toc = ''
 
     item.forEach(({directives, description}) => {
-      let hasHeading = directives.some(item => {
+      let hasHeading = directives.some(({directive}) => {
         return (
-          moduleDirectives.indexOf(item.directive) > -1 ||
-          headingDirectives.indexOf(item.directive) > -1
+          directive === 'property' ||
+          moduleDirectives.indexOf(directive) > -1 ||
+          headingDirectives.indexOf(directive) > -1
         )
       })
 
@@ -243,7 +244,10 @@ function outputMarkdown({srcList, refine}, done) {
           return
         }
 
-        if (headingDirectives.indexOf(directive) > -1) {
+        if (
+          headingDirectives.indexOf(directive) > -1 ||
+          directive === 'property'
+        ) {
           let metas = directives
             .filter(item => metaDirectives.indexOf(item.directive) > -1)
             .map(({directive, description}) => {
@@ -324,9 +328,9 @@ function writeDocGen({srcList, outputMarkdown}, done) {
 
     /* filePath.replace(`${srcPath}/`, '').replace(patterns.js, '')*/
     let linkTitle = title
-    let linkUrl = outputPath.replace(docGenPath, '')
+    let linkUrl = outputPath.replace(`${docGenPath}/`, '')
 
-    indexLinks += `+ [${linkTitle}](${linkUrl}.md)\n`
+    indexLinks += `+ [${linkTitle}](${linkUrl})\n`
 
     fs.exists(parentPath, exists => {
       if (exists === false) {
