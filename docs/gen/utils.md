@@ -11,7 +11,7 @@
 + [isHexStrict](#isHexStrict)
 + [hexToBytes](#hexToBytes)
 + [padLeft](#padLeft)
-+ [](#)
++ [leftPad](#leftPad)
 + [padRight](#padRight)
 + [rightPad](#rightPad)
 + [bytesToHex](#bytesToHex)
@@ -105,7 +105,7 @@ Convert a hex string to a byte array
 
 Put padding to the left. The default padding sign is '0'
 
-## 
+## leftPad
 
 Alias to padLeft
 
