@@ -45,7 +45,7 @@ let hexToBuffer = val => toBuffer(val)
  * @return {buffer}
  */
 let randomHexBuffer = (size = values.hex.randomHexSize) =>
-  hexToBuffer(randomHex(size))
+  hexToBuffer(removeLeadingZeroX(randomHex(size)))
 
 /**
  * True if a string is hex

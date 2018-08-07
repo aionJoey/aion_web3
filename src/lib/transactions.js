@@ -11,7 +11,7 @@ let transactionSchema = {
     'gasLimit',
     'gasPrice',
     'nonce',
-    'chainId'
+    'type'
   ],
   properties: {
     to: {type: 'string'},
@@ -22,7 +22,7 @@ let transactionSchema = {
     gasLimit: {type: 'string'},
     gasPrice: {type: 'string'},
     nonce: {type: 'string'},
-    chainId: {type: 'string'}
+    type: {type: 'string'}
   }
 }
 

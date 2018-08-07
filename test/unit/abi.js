@@ -19,7 +19,7 @@ describe('abi', () => {
     }
     let op = abi.encodeEventSignature(opts)
     op.should.be.exactly(
-      '0x2236226bdca8de2f2bc9a5be931cb54acc7d73c5a829b22dc2b7e92af174f7d4'
+      '0x9a89dbaa3149fad86683a1f4ea888a84fda5ad5cf6117dbe8976e18d54e3a1d3'
     )
     abi.encodeEventSignature('myEvent(uint128,bytes32)').should.be.exactly(op)
   })
@@ -40,7 +40,7 @@ describe('abi', () => {
       ]
     }
     let op = abi.encodeFunctionSignature(opts)
-    op.should.be.exactly('0xaaed82c1')
+    op.should.be.exactly('0x43c6eec4')
     abi
       .encodeFunctionSignature('myMethod(uint128,string)')
       .should.be.exactly(op)

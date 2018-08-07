@@ -1,3 +1,8 @@
+/**
+ * It's not implemented yet.
+ * @module IpcProvider
+ */
+
 // let net = require('net')
 
 function IpcProvider(url, net) {

@@ -1,7 +1,14 @@
+/**
+ * @module Accounts
+ */
+
+let numberToBn = require('number-to-bn')
 let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
 let {isFunction, isObject, find} = require('underscore')
+
+// aion-specific rlp fork
 let rlp = require('rlp')
 
 let {assignExtend} = require('./extend')
@@ -9,7 +16,7 @@ let {assignProvider} = require('./providers')
 
 let {isPrivateKey, createA0Address, createKeyPair} = require('./lib/accounts')
 
-let {hexToNumber, numberToHex, bytesToHex} = require('./utils')
+let {hexToNumber, bytesToHex} = require('./utils')
 
 let crypto = require('./lib/crypto')
 let {keccak256, blake2b256, nacl, scrypt} = crypto
@@ -51,9 +58,19 @@ let methods = [
 let aionPubSigLen = nacl.sign.publicKeyLength + nacl.sign.signatureLength
 
 function fromNat(val) {
-  let bn = numberToHex(val)
-  return bn === '0x0' ? '0x' : bn.length % 2 === 0 ? bn : '0x0' + bn.slice(2)
+  if (
+    val === undefined ||
+    val === null ||
+    val === 0 ||
+    val === '0' ||
+    val === '0x0'
+  ) {
+    return '0x'
+  }
+  return numberToBn(val).toString('hex')
 }
+
+// let fromNat = val => numberToBn(val).toBuffer()
 
 let getTimestamp = () => Math.floor(Date.now() / 1000)
 
@@ -102,6 +119,8 @@ Account.prototype.encrypt = function(password, options) {
 /**
  * Accounts constructor
  * @constructor Accounts
+ * @param {object} provider
+ * @param {object} providerOpts options
  */
 function Accounts(provider, providerOpts) {
   assignProvider(this, {provider, providerOpts})
@@ -117,6 +136,8 @@ Accounts instance members
 
 /**
  * Create Account using randomized data
+ * @instance
+ * @method create
  * @param {object} entropy hex buffer or string
  * @return {object}
  */
@@ -146,6 +167,16 @@ Accounts.prototype._findAccountByPublicKey = function(publicKey) {
       return false
     }
     return equalBuffers(publicKey, itemPublicKey)
+  })
+}
+
+Accounts.prototype._findAccountByAddress = function(address) {
+  return find(this.wallet, item => {
+    let itemAddress = get(item, 'address')
+    if (itemAddress === undefined) {
+      return false
+    }
+    return address === itemAddress
   })
 }
 
@@ -179,12 +210,12 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
  * @param {number} [tx.value]
  * @param {buffer} [tx.data]
  * @param {number} [tx.timestamp]
- * @param {number} tx.gas
- * @param {number} [tx.gasPrice]
- * @param {number} [tx.chainId]
+ * @param {number} tx.gas nrg in aion terms
+ * @param {number} [tx.gasPrice] nrg price
+ * @param {number} [tx.type] defaults to 0x01, for future use
  * @param {buffer} privateKey
  * @param {function} done
- * @returns {[type]}
+ * @returns {object} promise
  */
 Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   function signTransactionFailed(err) {
@@ -206,14 +237,17 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     return signTransactionFailed(new Error('tx.gas is required'))
   }
 
+  if (tx.chainId !== undefined) {
+    return signTransactionFailed(
+      new Error(`
+      Aion doesn't have a chainId you can pass.
+    `)
+    )
+  }
+
   let steps = {}
   let {address, publicKey} = this.privateKeyToAccount(privateKey)
   let transaction = Object.assign({}, tx)
-
-  if (transaction.chainId === undefined) {
-    // get chain id
-    steps.chainId = done => this.getId(done)
-  }
 
   if (transaction.gasPrice === undefined) {
     // get gas price
@@ -239,7 +273,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       timestamp = getTimestamp(),
       gas,
       gasPrice,
-      chainId
+      type = 1
     } = transaction
 
     if (gas === undefined) {
@@ -276,7 +310,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     RLP_TX_TO = 1
     RLP_TX_VALUE = 2
     RLP_TX_DATA = 3
-    RLP_TX_TIMESTAMP = 4,
+    RLP_TX_TIMESTAMP = 4
     RLP_TX_NRG = 5
     RLP_TX_NRGPRICE = 6
     RLP_TX_TYPE = 7
@@ -292,7 +326,7 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       fromNat(timestamp),
       fromNat(gas),
       fromNat(gasPrice),
-      fromNat(chainId)
+      fromNat(type)
     ]
 
     rlpValues = rlpValues.map(item => {
@@ -303,10 +337,16 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       return item
     })
 
+    // Aion-specific RLP encode
     let encoded = rlp.encode(rlpValues)
-    let messageHash = blake2b256(encoded)
-    let signature = nacl.sign.detached(messageHash, privateKey)
 
+    // hash it
+    let messageHash = blake2b256(encoded)
+
+    // sign
+    let signature = toBuffer(nacl.sign.detached(messageHash, privateKey))
+
+    // verify
     if (
       nacl.sign.detached.verify(messageHash, signature, publicKey) === false
     ) {
@@ -318,12 +358,14 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     `)
     }
 
+    // aion-specific signature scheme
     let aionPubSig = Buffer.concat([publicKey, signature], aionPubSigLen)
 
+    // decode and add signature
     let rawTx = rlp.decode(encoded)
-
     rawTx.push(toBuffer(aionPubSig))
 
+    // re-enode
     let rawTransaction = rlp.encode(rawTx)
 
     messageHash = bytesToHex(messageHash)
@@ -387,7 +429,7 @@ Accounts.prototype.recoverTransaction = function(rawTx) {
  * @instance
  * @method hashMessage
  * @param {string} message
- * @return {buffer} keccak256 hash
+ * @return {buffer} blake2b256 hash
  */
 Accounts.prototype.hashMessage = function(message) {
   let messageBuffer = toBuffer(message)
@@ -408,8 +450,8 @@ Accounts.prototype.hashMessage = function(message) {
 Accounts.prototype.sign = function(message, privateKey) {
   let account = this.privateKeyToAccount(privateKey)
   let {address, publicKey} = account
-  let messageHash = blake2b256(message)
-  let signature = nacl.sign.detached(messageHash, privateKey)
+  let messageHash = blake2b256(toBuffer(message))
+  let signature = toBuffer(nacl.sign.detached(messageHash, privateKey))
 
   if (nacl.sign.detached.verify(messageHash, signature, publicKey) === false) {
     throw new Error(`
@@ -424,10 +466,10 @@ Accounts.prototype.sign = function(message, privateKey) {
   let aionPubSig = Buffer.concat(
     [publicKey, toBuffer(signature)],
     aionPubSigLen
-  ).toString('hex')
+  )
 
-  messageHash = bytesToHex(messageHash)
   aionPubSig = bytesToHex(aionPubSig)
+  messageHash = bytesToHex(messageHash)
 
   return {
     message,
@@ -565,10 +607,10 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
  * Decrypt the keystorev3 object
  * @instance
  * @method decrypt
- * @param {[type]} ksv3
- * @param {[type]} password
- * @param {[type]} nonStrict
- * @returns {[type]}
+ * @param {object} ksv3
+ * @param {string} password
+ * @param {boolean} nonStrict
+ * @returns {object} account
  */
 Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
   if (password === undefined) {

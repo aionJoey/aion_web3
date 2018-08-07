@@ -1,3 +1,7 @@
+/**
+ * @module BatchRequest
+ */
+
 let series = require('async/series')
 
 /**

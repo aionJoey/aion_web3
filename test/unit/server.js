@@ -14,7 +14,7 @@ let {jsonRpc, ws} = config
 let express = require('express')
 let bodyParser = require('body-parser')
 let WebsocketServer = require('ws').Server
-let {each} = require('underscore')
+let each = require('lodash/each')
 
 let wss = new WebsocketServer({
   host: ws.host,

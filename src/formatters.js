@@ -1,3 +1,7 @@
+/**
+ * @module formatters
+ */
+
 let {isString, isNumber, isObject, isArray} = require('underscore')
 let {isAccountAddress} = require('./lib/accounts')
 let {prependZeroX, removeLeadingZeroX} = require('./lib/formats')

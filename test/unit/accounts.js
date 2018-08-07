@@ -42,7 +42,6 @@ describe('Accounts', () => {
       from: account.address,
       value: 90000,
       data: 'test',
-      chainId: 0,
       nonce: 0
     }
     account.signTransaction(tx, (err, res) => {

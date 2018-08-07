@@ -1,3 +1,8 @@
+/**
+ * Aion Web3
+ * @module Web3
+ */
+
 // helpers
 let {assignExtend} = require('./extend.js')
 let {assignProvider} = require('./providers.js')
@@ -16,6 +21,12 @@ let Shh = require('./shh.js')
 
 let methods = []
 
+/**
+ * Aion Web3 constructor
+ * @constructor Web3
+ * @param {object|string} provider
+ * @param {object} [providerOpts]
+ */
 function Web3(provider, providerOpts = {}) {
   assignProvider(this, {provider, providerOpts})
   assignExtend(this, {methods})
@@ -48,8 +59,18 @@ function Web3(provider, providerOpts = {}) {
 // Web3 instance memembers
 //
 
+/**
+ * Access version from client. It helps the ecosystem detect compatibility.
+ * @instance
+ * @property {string} version
+ */
 Web3.prototype.version = '1.0.0'
 
+/**
+ * Access submodules of Web3
+ * @instance
+ * @property {object} modules
+ */
 Web3.prototype.modules = {
   Eth,
   Net,
@@ -58,6 +79,14 @@ Web3.prototype.modules = {
   Shh
 }
 
+/**
+ * Access providers from Web3
+ *
+ * `new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'))`
+ *
+ * @instance
+ * @property {object} providers
+ */
 Web3.prototype.providers = {
   HttpProvider,
   WebsocketProvider,
@@ -68,9 +97,26 @@ Web3.prototype.providers = {
 // Web3 static members
 //
 
+/**
+ * Also access version from the static property
+ * @static
+ * @property {string} version
+ */
 Web3.version = '1.0.0'
+
+/**
+ * Web3 utils are useful functions for working with hex, hashing, and
+ * formatting.
+ * @static
+ * @property {object} utils
+ */
 Web3.utils = utils
 
+/**
+ * Access Web3 submodules from a static member
+ * @static
+ * @property {object} modules
+ */
 Web3.modules = {
   Eth,
   Net,
@@ -79,6 +125,11 @@ Web3.modules = {
   Shh
 }
 
+/**
+ * Providers accessed from static property
+ * @static
+ * @property {object} providers
+ */
 Web3.providers = {
   HttpProvider,
   WebsocketProvider,

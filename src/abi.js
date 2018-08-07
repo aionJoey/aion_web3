@@ -1,7 +1,6 @@
 /**
- * @module  abi
- *
- *
+ * ABI encoding and decoding
+ * @module abi
  */
 
 let padStart = require('lodash/padStart')
@@ -15,7 +14,7 @@ let {
   removeLeadingZeroX
 } = require('./lib/formats')
 
-let {keccak256} = require('./lib/crypto')
+let {blake2b256} = require('./lib/crypto')
 let solidity = require('./lib/solidity')
 let values = require('./lib/values')
 
@@ -42,7 +41,7 @@ function fnHashBuffer(val) {
     }
   }
 
-  return keccak256(op).slice(0, values.solidity.types.function.byteLength)
+  return blake2b256(op).slice(0, values.solidity.types.function.byteLength)
 }
 
 /**

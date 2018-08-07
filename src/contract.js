@@ -1,3 +1,7 @@
+/**
+ * @module Contract
+ */
+
 let {EventEmitter} = require('events')
 let get = require('lodash/get')
 let cloneDeep = require('lodash/cloneDeep')
@@ -43,6 +47,13 @@ let methods = [
     outputFormatter: hexToNumber
   },
   {
+    name: 'estimate',
+    call: 'eth_estimateGas',
+    params: 1,
+    inputFormatter: [inputCallFormatter],
+    outputFormatter: hexToNumber
+  },
+  {
     name: 'call',
     call: 'eth_call',
     params: 2,
@@ -62,6 +73,7 @@ let methods = [
 ]
 
 function ContractMethod({args, provider, contract, accounts}) {
+  this._evts = {}
   this._contract = contract
   this._accounts = accounts
   this._args = args
@@ -72,6 +84,11 @@ function ContractMethod({args, provider, contract, accounts}) {
 
 ContractMethod.prototype.encodeABI = function(params) {
   return abi.encodeFunctionCall(this._contract.options.jsonInterface, params)
+}
+
+ContractMethod.prototype.on = function(evt, fn) {
+  this._evts[evt] = fn
+  return this
 }
 
 /**
@@ -106,16 +123,10 @@ function Contract(jsonInterface, address, options) {
     }
   })
 
-  // magically get accounts
-  let accounts =
-    get(contract, 'constructor.accounts') ||
-    get(contract, 'constructor._accounts')
-  contract._accounts = accounts
+  // passed from Eth.prototype.Contract
+  contract._accounts = null
 
-  contract.jsonInterface = iface
-  contract.address = addr
   contract.options = opts
-
   contract.options.address = addr
   contract.options.jsonInterface = iface
 
@@ -155,6 +166,65 @@ Contract.prototype.clone = function() {
   return new Contract(jsonInterface, address, options)
 }
 
-// Contract.prototype.deploy = function(options, done) {}
+/**
+ * Deploy the contract
+ * @method deploy
+ * @param {object} options
+ * @param {string} options.data smart contract bytes in hex
+ * @param {array} options.arguments smart contract contructor arguments
+ * @returns {object}
+ */
+Contract.prototype.deploy = function(options) {
+  let {data} = options
+
+  if (data === undefined || data === null) {
+    throw new Error('the contract data cannot be blank')
+  }
+
+  if (options.arguments !== undefined && isArray(options.arguments) === false) {
+    throw new Error('the optional constructor arguments must be an array')
+  }
+
+  this.options = Object.assign(this.options, options)
+
+  /*let {jsonInterface} = this.options
+  let resolve
+  let reject
+
+  let contractConstructor = find(jsonInterface, item => {
+    return item.name === 'constructor'
+  })
+
+  let originalSend = contract.send
+  let originalSend = contract.send
+
+  contract.send = function(...args) {
+    originalSend(...args)
+    return contract
+  }
+
+  contract.send.request = function() {}
+
+  contract.encodeABI = function() {}
+
+  contract.estimateGas = function() {}
+
+  //
+  // emulate a promise
+  //
+
+  contract.then = (r1, r2) => {
+    resolve = r1
+    if (isFunction(r2) === true) {
+      reject = t2
+    }
+  }
+
+  contract.catch = r => {
+    reject = r
+  }
+*/
+  return this
+}
 
 module.exports = Contract

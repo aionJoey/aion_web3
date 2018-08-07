@@ -1,3 +1,8 @@
+/**
+ * Internally used to extend constructors with providers functionality.
+ * @module providers
+ */
+
 let HttpProvider = require('./http-provider')
 let IpcProvider = require('./ipc-provider')
 let WebsocketProvider = require('./websocket-provider')

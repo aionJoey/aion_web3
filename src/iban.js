@@ -1,3 +1,7 @@
+/**
+ * @module Iban
+ */
+
 let BN = require('bn.js')
 let padStart = require('lodash/padStart')
 let patterns = require('./lib/patterns')
@@ -136,6 +140,11 @@ function ibanAddressChecksum(ibanAddress) {
   return ibanAddress.substr(2, 2)
 }
 
+/**
+ * Iban constructor `new Iban(ibanAddress)`
+ * @constructor Iban
+ * @param {string} ibanAddress
+ */
 function Iban(ibanAddress) {
   // ethereum web3 doesn't validate on the way in so it can cause problems if we do
   /*if (isValidIbanAddress(ibanAddress) === false) {
@@ -153,8 +162,10 @@ Iban instance members
 
 /**
  * Convert IBAN to Aion address
- * @param {[type]} ibanAddress
- * @return {[type]}
+ * @instance
+ * @method toAddress
+ * @param {string} ibanAddress
+ * @return {string}
  */
 Iban.prototype.toAddress = function(ibanAddress) {
   return ibanToAion(ibanAddress || this._ibanAddress)
@@ -162,6 +173,8 @@ Iban.prototype.toAddress = function(ibanAddress) {
 
 /**
  * Convert an Aion address into an Iban object
+ * @instance
+ * @method toIban
  * @param {string} aionAddress
  * @return {object}
  */
@@ -170,10 +183,12 @@ Iban.prototype.toIban = function(aionAddress) {
 }
 
 /**
- * Create an Iban from **aion** address
+ * Create an Iban from **Aion** address
  *
  * It's still named fromEthereumAddress for API compatibility
  *
+ * @instance
+ * @method fromEthereumAddress
  * @param {string} aionAddress
  * @return {object}
  */
@@ -183,6 +198,8 @@ Iban.prototype.fromEthereumAddress = function(aionAddress) {
 
 /**
  * Create Iban instance from BBAN address
+ * @instance
+ * @method fromBban
  * @param {string} bbanAddress
  * @return {object}
  */
@@ -192,6 +209,8 @@ Iban.prototype.fromBban = function(bbanAddress) {
 
 /**
  * Use institution and identifier to create BBAN and then IBAN
+ * @instance
+ * @method createIndirect
  * @param {string} options.institution
  * @param {string} options.identifier
  * @return {object}
@@ -206,6 +225,8 @@ Iban.prototype.createIndirect = function({institution, identifier}) {
 
 /**
  * Check if the address is valid
+ * @instance
+ * @method isValid
  * @param {string} [ibanAddress]
  * @return {boolean}
  */
@@ -215,6 +236,8 @@ Iban.prototype.isValid = function(ibanAddress) {
 
 /**
  * IBAN address is direct
+ * @instance
+ * @method isDirect
  * @param {string} [ibanAddress]
  * @return {boolean}
  */
@@ -224,6 +247,8 @@ Iban.prototype.isDirect = function(ibanAddress) {
 
 /**
  * IBAN address is indirect
+ * @instance
+ * @method isIndirect
  * @param {string} [ibanAddress]
  * @return {Boolean}
  */
@@ -233,6 +258,8 @@ Iban.prototype.isIndirect = function(ibanAddress) {
 
 /**
  * Output checksum address
+ * @instance
+ * @method checmsum
  * @param {string} [ibanAddress]
  * @return {string}
  */
@@ -242,6 +269,8 @@ Iban.prototype.checksum = function(ibanAddress) {
 
 /**
  * Get the institution part of the address
+ * @instance
+ * @method institution
  * @return {string}
  */
 Iban.prototype.institution = function() {
@@ -250,6 +279,8 @@ Iban.prototype.institution = function() {
 
 /**
  * Get the client part of the address
+ * @instance
+ * @method client
  * @return {string}
  */
 Iban.prototype.client = function() {
@@ -258,6 +289,8 @@ Iban.prototype.client = function() {
 
 /**
  * Get the IBAN address
+ * @instance
+ * @method toString
  * @return {string}
  */
 Iban.prototype.toString = function() {
@@ -272,6 +305,8 @@ Iban static members
 
 /**
  * Convert IBAN to Aion address
+ * @static
+ * @method toAddress
  * @param {string} address
  * @return {string}
  */
@@ -281,7 +316,7 @@ Iban.toAddress = function(ibanAddress) {
 
 /**
  * Convert Aion address to IBAN address
- *
+ * @static
  * @method toIban
  * @param {string} address
  * @return {string} the IBAN address
@@ -292,6 +327,8 @@ Iban.toIban = function(address) {
 
 /**
  * Create Iban instance from BBAN address
+ * @static
+ * @method fromBban
  * @param {string} bbanAddress
  * @return {object}
  */
@@ -301,6 +338,8 @@ Iban.fromBban = function(bbanAddress) {
 
 /**
  * Check if the IBAN address is valid
+ * @static
+ * @method isValid
  * @param {string} ibanAddress
  * @return {boolean}
  */
@@ -310,6 +349,8 @@ Iban.isValid = function(ibanAddress) {
 
 /**
  * True if direct IBAN address
+ * @static
+ * @method isDirect
  * @param {string} ibanAddress
  * @return {boolean}
  */
@@ -317,10 +358,24 @@ Iban.isDirect = function(ibanAddress) {
   return isDirectIbanAddress(ibanAddress)
 }
 
+/**
+ * True if ibanAddress is indirect
+ * @static
+ * @method isIndirect
+ * @param {string} ibanAddress
+ * @returns {boolean}
+ */
 Iban.isIndirect = function(ibanAddress) {
   return isIndirectIbanAddress(ibanAddress)
 }
 
+/**
+ * Return IBAN checksum address
+ * @static
+ * @method checksum
+ * @param {string} ibanAddress
+ * @returns {string}
+ */
 Iban.checksum = function(ibanAddress) {
   return ibanAddressChecksum(ibanAddress)
 }

@@ -1,3 +1,7 @@
+/**
+ * @module HttpProvider
+ */
+
 let fetch = require('cross-fetch')
 let values = require('./lib/values')
 
@@ -8,11 +12,23 @@ let headers = {
   'Content-Type': 'application/json'
 }
 
+/**
+ * HttpProvider constructor
+ * @method HttpProvider
+ * @param {string} url
+ * @param {object} opts
+ */
 function HttpProvider(url = values.rpc.url, opts = {}) {
   this.url = url
   this.opts = opts
 }
 
+/**
+ * Send the payload to the node RPC
+ * @method send
+ * @param {object} payload
+ * @param {function} done
+ */
 HttpProvider.prototype.send = function(payload, done) {
   let body = JSON.stringify(payload)
   let url = this.url

@@ -1,5 +1,9 @@
+/*eslint-disable no-console*/
+
 let Contract = require('../../src/contract')
 let values = require('../../src/lib/values')
+let Eth = require('../../src/eth')
+let {testProvider} = require('./fixtures')
 
 let inputCases = [
   {
@@ -174,5 +178,63 @@ describe('Contract', () => {
     method.send.should.be.a.Function
     method.estimateGas.should.be.a.Function
     method.encodeABI.should.be.a.Function
+  })
+
+  xit('deploy', done => {
+    let count = 0
+
+    function deployDone() {
+      count += 1
+      console.log('deployDone', count)
+    }
+
+    let deployEth = new Eth(testProvider)
+    let deployContract = new deployEth.Contract(jsonInterface, address, options)
+
+    console.log('deployContract._accounts', deployContract._accounts)
+
+    deployContract
+      .deploy({
+        data: '0x123456',
+        arguments: [123, 'four', 'five']
+      })
+      .send(
+        {
+          from:
+            '0xa07c95cc8729a0503c5ad50eb37ec8a27cd22d65de3bb225982ec55201366920',
+          gas: 1000000,
+          gasPrice: 1000000
+        },
+        (err, res) => {
+          if (err !== null && err !== undefined) {
+            console.error('error sending from deploy', err)
+            return done(err)
+          }
+          console.log('send callback res', res)
+          deployDone()
+        }
+      )
+      .on('error', err => {
+        console.error('error from deploy event', err)
+        done(err)
+      })
+      .on('transactionHash', transactionHash => {
+        transactionHash.should.be.a.String
+        deployDone()
+      })
+      .on('receipt', receipt => {
+        receipt.should.be.a.String
+        deployDone()
+      })
+      .on('confirmation', (confirmationNumber, receipt) => {
+        confirmationNumber.should.be.a.Number
+        receipt.should.be.a.String
+        deployDone()
+      })
+      .then(contract => {
+        contract.should.be.an.Object
+        contract.options.address.should.be.a.String
+        deployDone()
+      })
   })
 })

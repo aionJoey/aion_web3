@@ -1,3 +1,7 @@
+/**
+ * @module Personal
+ */
+
 let {assignExtend} = require('./extend.js')
 let {assignProvider} = require('./providers.js')
 let BatchRequest = require('./batch-request')

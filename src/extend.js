@@ -1,7 +1,45 @@
+/**
+ * Most of the modules like Web3, Eth, Net, Accounts, and Contract
+ * get a method named `extend`
+ * @module extend
+ */
+
+/**
+ * Usage:
+ *
+ * ```js
+ * web3.extend({
+ *   methods: [
+ *     {
+ *       // the name of the method to attach
+ *       name: 'methodName',
+ *       // RPC call name on the node implementation
+ *       call: 'rpc_call_name',
+ *       // how many parameters does it take?
+ *       params: 2,
+ *       // provide a formatter or `null` for each param
+ *       // `null` means no formatter, just pass the param as-is
+ *       inputFormatter: [lowercaseFormatter, uppercaseFormatter]
+ *       // format the output from the RPC call
+ *       outputFormatter: outputBigNumberFormatter
+ *       // before the payload is sent inspect or transform it
+ *       // return the payload when done
+ *       transformPayload: (val) => val
+ *     }
+ *   ]
+ * })
+ * ```
+ *
+ * @method extend
+ * @param {object} options
+ * @param {string} [options.property] property name to attach to the object
+ * @param {array} options.methods
+ */
+
 /*
 
-it can be a bit complex since it's passing context to the
-methods it's assigned. for now the input and output formatters
+It can be a bit complex since it's passing context to the
+methods it's assigned. For now the input and output formatters
 rely on the context.
 
 */

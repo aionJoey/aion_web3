@@ -1,3 +1,7 @@
+/**
+ * @module Eth
+ */
+
 let {EventEmitter} = require('events')
 let {noop, each, isString} = require('underscore')
 
@@ -286,6 +290,8 @@ let methods = [
  * @param {object} providerOpts
  */
 function Eth(provider, providerOpts) {
+  let eth = this
+
   this._subscriptions = []
 
   assignProvider(this, {provider, providerOpts})
@@ -296,8 +302,27 @@ function Eth(provider, providerOpts) {
   this.net = new Net()
   this.personal = new Personal()
   this.personal.setProvider(this.currentProvider)
-
   this.accounts = new Accounts()
+
+  /**
+   * Create Contract instances from Eth
+   * @instance
+   * @type {function}
+   */
+  this.Contract = function(jsonInterface, address, options) {
+    /*
+
+    Contract constructor is inside Eth so it can get access to
+    `Account` and `currentProvider`. Outside as a prototype it cannot perhaps
+    due to `new`
+
+    */
+    let {currentProvider, accounts} = eth
+    let contract = new Contract(jsonInterface, address, options)
+    contract.setProvider(currentProvider)
+    contract._accounts = accounts
+    return contract
+  }
 }
 
 /**
@@ -306,13 +331,6 @@ function Eth(provider, providerOpts) {
  * @type {function}
  */
 Eth.prototype.Iban = Iban
-
-/**
- * Create Contract instances from Eth
- * @instance
- * @type {function}
- */
-Eth.prototype.Contract = Contract
 
 /**
  * Create BatchRequest instance
@@ -336,7 +354,6 @@ Eth.prototype.BatchRequest = BatchRequest
  * + error, Error
  *
  * @instance
- * @deprecated one
  * @method subscribe
  * @param {string} evtName event name
  * @param {object} [opts]

@@ -1,3 +1,7 @@
+/**
+ * @module Net
+ */
+
 let {hexToNumber} = require('./utils')
 let {assignProvider} = require('./providers')
 let {assignExtend} = require('./extend')
@@ -22,6 +26,12 @@ let methods = [
   }
 ]
 
+/**
+ * Net constructor
+ * @method Net
+ * @param {object} provider
+ * @param {object} providerOpts
+ */
 function Net(provider, providerOpts) {
   assignProvider(this, {provider, providerOpts})
   assignExtend(this, {methods})

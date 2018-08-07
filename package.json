@@ -48,7 +48,7 @@
     "lodash": "^4.17.10",
     "number-to-bn": "^1.7.0",
     "randomhex": "^0.1.5",
-    "rlp": "^2.1.0",
+    "rlp": "github:qoire/rlp",
     "safe-buffer": "^5.1.2",
     "scryptsy": "^2.0.0",
     "tweetnacl": "^1.0.0",

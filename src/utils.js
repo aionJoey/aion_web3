@@ -28,13 +28,14 @@ let {
 
 /**
  * Generate random hex values of a certain length
+ * @method randomHex
  * @param {number} size how many bytes
  * @return {string} randomly generated hex value starting with '0x'
  */
 let randomHex = size => randomhex(size)
 
 /**
- *
+ * underscore module
  * @member _
  * @type {function}
  */
@@ -52,12 +53,14 @@ let randomHex = size => randomhex(size)
 
 /**
  * Convert number to BN
+ * @method toBN
+ * @param {object} val
+ * @returns {object} BN
  */
 let toBN = val => numberToBn(val)
 
 /**
  * Get the constructor of whatever is passed in
- * @access private
  * @param {object} obj
  * @returns {string} constructor name
  */
@@ -65,6 +68,7 @@ let getConstructor = val => get(val, 'constructor.name')
 
 /**
  * BN.isBN
+ * @method isBN
  * @param {object} val
  * @returns {boolean}
  */
@@ -72,6 +76,7 @@ let isBN = val => BN.isBN(val)
 
 /**
  * Is it a `BigNumber` or not?
+ * @method isBigNumber
  * @param {object} obj
  * @return {boolean}
  */
@@ -82,6 +87,7 @@ let isBigNumber = obj => getConstructor(obj) === 'BigNumber'
  *
  * 0x number expressions return false but '0x' string expressions true
  *
+ * @method isHex
  * @param {string} val
  * @return {boolean}
  */
@@ -91,6 +97,7 @@ let isHex = val =>
 
 /**
  * Checks if a value is hex starting with '0x'
+ * @method isHexStrict
  * @param {string} val
  * @return {boolean}
  */
@@ -113,7 +120,7 @@ function hexToBytesReduction(acm, item, index, arr) {
 
 /**
  * Convert a hex string to a byte array
- *
+ * @method hexToBytes
  * @param {string|number|BN} hex
  * @return {array} the byte array
  */
@@ -190,6 +197,7 @@ function createPadder(direction) {
 
 /**
  * Put padding to the left. The default padding sign is '0'
+ * @method padLeft
  * @param {string|number|BN|BigNumber} val
  * @param {number} length how many of the pad sign
  * @param {string} sign
@@ -198,11 +206,13 @@ let padLeft = createPadder('left')
 
 /**
  * Alias to padLeft
+ * @method leftPad
  */
 let leftPad = padLeft
 
 /**
  * Put padding to the right. The default padding sign is '0'
+ * @method padRight
  * @param {string|number|BN|BigNumber} val
  * @param {number} quantity how many of the pad sign
  * @param {string} sign
@@ -211,11 +221,13 @@ let padRight = createPadder('right')
 
 /**
  * Alias to padRight
+ * @method rightPad
  */
 let rightPad = padRight
 
 /**
  * Convert array of bytes into hex string with 0x prepended
+ * @method bytesToHex
  * @param {array} val bytes
  * @return {string}
  */
@@ -225,7 +237,7 @@ let bytesToHex = val => prependZeroX(toBuffer(val).toString('hex'))
  * Compute SHA3 256 length hash a.k.a. keccak256
  *
  * Prepends '0x' string to the result
- *
+ * @method sha3
  * @param {string|array} val
  * @return {string} keccak256 hash
  */
@@ -283,6 +295,7 @@ function sha3(val) {
 
 /**
  * Alias to utils.sha3
+ * @method keccak256
  * @param {string|array} val
  * @return {string} keccak256 hash
  */
@@ -290,6 +303,7 @@ function sha3(val) {
 
 /**
  * True if valid Aion account address
+ * @method isAddress
  * @param {string} val
  * @return {boolean}
  */
@@ -297,6 +311,7 @@ let isAddress = val => accounts.isAccountAddress(val)
 
 /**
  * Returns true if the address checksum calculates correctly
+ * @method checkAddressChecksum
  * @param {string} val
  * @return {boolean}
  */
@@ -308,6 +323,12 @@ function checkAddressChecksum(val) {
   return accounts.isValidChecksumAddress(val)
 }
 
+/**
+ * Convert utf8 string to hex string starting with 0x
+ * @method utf8ToHex
+ * @param {string} val
+ * @returns {string}
+ */
 function utf8ToHex(val) {
   let op = utf8.encode(val)
   let hex = ''
@@ -334,6 +355,12 @@ function utf8ToHex(val) {
   return '0x' + hex
 }
 
+/**
+ * Convert number to hex string with leading 0x
+ * @method numberToHex
+ * @param {number|BN|BigNumber} val
+ * @returns {string}
+ */
 function numberToHex(val) {
   if (val === undefined || val === null) {
     // should this warn? if the user thinks its a number but its not
@@ -354,6 +381,7 @@ function numberToHex(val) {
 /**
  * It's used internally to convert addresses, booleans, objects, strings,
  * and numbers into hex for solidity sha3.
+ * @method toHex
  * @param {object} val
  * @param {string} [returnType]
  * @return {string}
@@ -654,6 +682,7 @@ function soliditySortArg(item) {
 
 /**
  * Converts all the arguments into some other format then hashes it with sha3.
+ * @method soliditySha3
  * @param args captures all arguments
  * @return {string}
  */
@@ -666,7 +695,7 @@ function soliditySha3(...args) {
  *
  * Rather than being all lower or uppercase letters are upper or lower based
  * on some critera.
- *
+ * @method toChecksumAddress
  * @param {string} val
  * @return {string}
  */
@@ -683,6 +712,7 @@ let toChecksumAddress = val => {
 
 /**
  * Convert hex string to number string
+ * @method hexToNumberString
  * @param {string} val
  * @return {string}
  */
@@ -690,6 +720,7 @@ let hexToNumberString = val => toBN(val).toString(10)
 
 /**
  * Convert hex string to javascript number
+ * @method hexToNumber
  * @param {string} val
  * @return {number}
  */
@@ -697,6 +728,7 @@ let hexToNumber = val => toBN(val).toNumber()
 
 /**
  * Convert hex string to utf8 string
+ * @method hexToUtf8
  * @param {string} val
  * @return {string}
  */
@@ -720,12 +752,24 @@ function hexToUtf8(val) {
   return utf8.decode(op)
 }
 
+/**
+ * Convert hex string to ASCII encoded string
+ * @method hexToAscii
+ * @param {string} val
+ * @returns {string}
+ */
 function hexToAscii(val) {
   return hexToBytes(val)
     .map(item => String.fromCharCode(item))
     .join('')
 }
 
+/**
+ * Convert ASCII to hex encoded string with leading 0x
+ * @method asciiToHex
+ * @param {string} val
+ * @returns {string}
+ */
 function asciiToHex(val) {
   if (val === undefined) {
     return copyString(values.hex.zero)
@@ -739,6 +783,12 @@ function asciiToHex(val) {
   )
 }
 
+/**
+ * Twos Compliment binary number function to hex string with leading 0x
+ * @method toTwosComplement
+ * @param {number|BN|BigNumber} val
+ * @returns {string}
+ */
 let toTwosComplement = val =>
   prependZeroX(
     toBN(val)
@@ -746,6 +796,12 @@ let toTwosComplement = val =>
       .toString(16, 64)
   )
 
+/**
+ * blake2b 256 hash string with leading 0x
+ * @method blake2b256
+ * @param {string|number|buffer} val
+ * @returns {string}
+ */
 function blake2b256(val) {
   if (
     val === undefined ||
