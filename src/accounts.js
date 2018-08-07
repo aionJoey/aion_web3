@@ -67,10 +67,8 @@ function fromNat(val) {
   ) {
     return '0x'
   }
-  return numberToBn(val).toString('hex')
+  return numberToBn(val)
 }
-
-// let fromNat = val => numberToBn(val).toBuffer()
 
 let getTimestamp = () => Math.floor(Date.now() / 1000)
 
@@ -328,14 +326,6 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       fromNat(gasPrice),
       fromNat(type)
     ]
-
-    rlpValues = rlpValues.map(item => {
-      if (item === undefined || item === null) {
-        return '0x'
-      }
-
-      return item
-    })
 
     // Aion-specific RLP encode
     let encoded = rlp.encode(rlpValues)
