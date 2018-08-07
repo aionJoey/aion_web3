@@ -2,6 +2,7 @@
 
 + [Contract](#Contract)
 + [clone](#clone)
++ [deploy](#deploy)
 
 ## Contract
 
@@ -18,4 +19,13 @@ An object that facilitates working with smart contracts
 + returns `object` 
 
 Copy the Contract object
+
+## deploy
+
++ options, `object`
++ options.data, `string`, smart contract bytes in hex
++ options.arguments, `array`, smart contract contructor arguments
++ returns `object` 
+
+Deploy the contract
 

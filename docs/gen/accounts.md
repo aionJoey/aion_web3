@@ -1,6 +1,7 @@
 # accounts
 
 + [Accounts](#Accounts)
++ [](#)
 + [privateKeyToAccount](#privateKeyToAccount)
 + [signTransaction](#signTransaction)
 + [recoverTransaction](#recoverTransaction)
@@ -12,7 +13,19 @@
 
 ## Accounts
 
++ provider, `object`
++ providerOpts, `object`, options
+
 Accounts constructor
+
+## 
+
+*instance member*
+
++ entropy, `object`, hex buffer or string
++ returns `object` 
+
+Create Account using randomized data
 
 ## privateKeyToAccount
 
@@ -33,9 +46,9 @@ Get an account by providing a private key
 + tx.value, `number`, *optional*
 + tx.data, `buffer`, *optional*
 + tx.timestamp, `number`, *optional*
-+ tx.gas, `number`
-+ tx.gasPrice, `number`, *optional*
-+ tx.chainId, `number`, *optional*
++ tx.gas, `number`, nrg in aion terms
++ tx.gasPrice, `number`, nrg price, *optional*
++ tx.type, `number`, defaults to 0x01, for future use, *optional*
 + privateKey, `buffer`
 + done, `function`
 + returns `[type]` 
@@ -59,7 +72,7 @@ Given a signature it will recover the Aion address.
 *instance member*
 
 + message, `string`
-+ returns `buffer` keccak256 hash
++ returns `buffer` blake2b256 hash
 
 Hashed Aion signed message with preamble
 
