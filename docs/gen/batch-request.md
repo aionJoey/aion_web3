@@ -1,4 +1,4 @@
-# batch-request
+# BatchRequest
 
 + [BatchRequest](#BatchRequest)
 + [add](#add)

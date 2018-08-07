@@ -15,19 +15,11 @@ npm install aion-web3
 
 ## Connect to Aion
 
+Simple examples of RPC calls
+
 ```js
 let Web3 = require('aion-web3')
 let web3 = new Web3('https://conquest-web3.aion.network:443')
-
-// get protocol version
-web3.eth
-  .getProtocolVersion()
-  .then(res => {
-    console.log('conquest protocol version', res)
-  })
-  .catch(err => {
-    console.error('error getting protocol version', err)
-  })
 
 // check current gas price
 web3.eth
@@ -52,18 +44,68 @@ web3.eth
   })
 ```
 
+A new capability of Web3 is that it can create and submit binary transactions directly without reliance on the Personal interfaces.
+
+```js
+let privateKey = Buffer.from('.. my private key hex', 'hex')
+let account = web3.eth.accounts.privateKeyToAccount(privateKey)
+
+let tx = {
+  to: '0xa0b1b3f651990669c031866ec68a4debfece1d3ffb9015b2876eda2a9716160b',
+  value: 1000000,
+  gas: 20000
+}
+
+/*
+
+All these RPC calls are available from a Promise interface too
+
+*/
+
+account.signTransaction(tx, (err, signedTx) => {
+  if (err !== null && err !== undefined) {
+    return console.error('error signing transaction', err)
+  }
+
+  let {messageHash, signature, rawTransaction} = signedTx
+
+  console.log('messageHash', messageHash)
+  console.log('signature', signature)
+  console.log('rawTransaction', rawTransaction)
+
+  web3.eth.sendSignedTransaction(rawTransaction, (err, txHash) => {
+    if (err !== null && err !== undefined) {
+      return console.error('error sending signed transaction', err)
+    }
+
+    // the node received the transaction ✅
+
+    console.log('txHash', txHash)
+    /*
+
+    txHash === messageHash
+
+    From here you may want to check receipts, confirmations, and other operations.
+
+    */
+  })
+})
+````
+
 In the browser you have some choices.
 
 + Using your bundler `let Web3 = require('aion-web3')`
-  * See also [./docs/guides/webpack.md](./docs/guides/webpack.md)
+  * See also the [Webpack guide](./docs/guides/webpack.md)
 + Put `./dist/aion-web3.min.js` into your `<script src="./dist/aion-web3.min.js"></script>`
   * `window.Web3`
 
 ## Documentation
 
-Please refer to [Ethereum web3 v1.0 documentation](https://web3js.readthedocs.io/en/1.0/index.html) until our Aion-specific docs are generated soon.
+Please refer to [Ethereum web3 v1.0 documentation](https://web3js.readthedocs.io/en/1.0/index.html) as the API is as exact as it can be.
 
-[A bit of history](https://github.com/aionnetwork/aion_web3/issues/10)  how this module came into being.
+**WIP** [Aion Web3 documentation](./docs/gen)
+
+[A bit of history](https://github.com/aionnetwork/aion_web3/issues/10) how this module came into being.
 
 ## Development
 
@@ -75,8 +117,14 @@ npm install
 # watch for changes and test
 npm run dev
 
-# just test
+# unit tests
 npm test
+
+# integration tests (requires running node)
+npm run integration
+
+# coverage
+npm run coverage
 
 # build for production
 npm run prd
@@ -88,5 +136,8 @@ The tools will give you instant feedback about code style and unit testing. Cont
 
 + https://aion.network
 + Aion wiki https://github.com/aionnetwork/aion/wiki
-+ [./docs/guides](./docs/guides)
++ Aion forum https://forum.aion.network
++ [Aion Web3 Guides](./docs/guides)
++ [eslint](https://eslint.org/) - our linter
++ [prettier](https://prettier.io/) - automatic js formatting
 

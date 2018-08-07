@@ -1,4 +1,4 @@
-# bzz
+# Bzz
 
 + [Bzz](#Bzz)
 

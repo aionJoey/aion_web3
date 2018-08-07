@@ -1,2 +1,4 @@
-# wallet
+# Wallet
+
+Used by `Accounts`
 

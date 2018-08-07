@@ -9,6 +9,8 @@
 + [decodeParameter](#decodeParameter)
 + [decodeLog](#decodeLog)
 
+ABI encoding and decoding
+
 ## encodeEventSignature
 
 + val, `string|object`

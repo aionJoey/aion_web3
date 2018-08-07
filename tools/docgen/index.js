@@ -35,6 +35,8 @@ let values = {
   doubleLineBreak: '\n\n'
 }
 
+let moduleDirectives = ['module', 'file']
+
 let headingDirectives = [
   'method',
   'constructor',
@@ -44,14 +46,14 @@ let headingDirectives = [
   'name'
 ]
 
-let paramDirectives = ['param', 'callback']
+let paramDirectives = ['param', 'callback', 'property']
 
 let metaDirectives = ['deprecated', 'generator', 'instance', 'static']
 
 let outputDirectives = ['returns', 'return', 'type']
 
-let directivePatterns = ['module']
-  .concat(headingDirectives, metaDirectives, outputDirectives)
+let directivePatterns = []
+  .concat(moduleDirectives, headingDirectives, metaDirectives, outputDirectives)
   .map(item => new RegExp(`@${item}`))
 
 let descriptiveMetaMap = {
@@ -137,6 +139,14 @@ function fineRefine(comments, index) {
         pLine.types = types[1]
       }
 
+      if (moduleDirectives.indexOf(pLine.directive) > -1) {
+        let name = patterns.metaDesc.exec(item)
+
+        if (name !== null) {
+          pLine.name = name[1]
+        }
+      }
+
       if (headingDirectives.indexOf(pLine.directive) > -1) {
         let name = patterns.headingName.exec(item)
 
@@ -211,7 +221,10 @@ function outputMarkdown({srcList, refine}, done) {
 
     item.forEach(({directives, description}) => {
       let hasHeading = directives.some(item => {
-        return headingDirectives.indexOf(item.directive) > -1
+        return (
+          moduleDirectives.indexOf(item.directive) > -1 ||
+          headingDirectives.indexOf(item.directive) > -1
+        )
       })
 
       if (hasHeading === false) {
@@ -222,12 +235,12 @@ function outputMarkdown({srcList, refine}, done) {
         let heading = ''
         let line = ''
 
-        if (metaDirectives.indexOf(directive) > -1) {
-          return
-        }
-
         if (directive === 'module') {
           module = name
+        }
+
+        if (metaDirectives.indexOf(directive) > -1) {
+          return
         }
 
         if (headingDirectives.indexOf(directive) > -1) {
@@ -289,7 +302,7 @@ function outputMarkdown({srcList, refine}, done) {
       markdown = `# ${module}\n\n${markdown}`
     }
 
-    return markdown
+    return {title: module, markdown}
   })
 
   done(null, op)
@@ -299,7 +312,8 @@ function writeDocGen({srcList, outputMarkdown}, done) {
   let indexLinks = '\n'
 
   let steps = srcList.map((filePath, index) => done => {
-    let source = outputMarkdown[index].replace(
+    let {title, markdown} = outputMarkdown[index]
+    let source = markdown.replace(
       patterns.multiLineBreak,
       values.doubleLineBreak
     )
@@ -307,9 +321,12 @@ function writeDocGen({srcList, outputMarkdown}, done) {
       .replace(srcPath, docGenPath)
       .replace(patterns.js, '.md')
     let parentPath = path.dirname(outputPath)
-    let linkTitle = filePath.replace(`${srcPath}/`, '').replace(patterns.js, '')
 
-    indexLinks += `+ [${linkTitle}](${linkTitle}.md)\n`
+    /* filePath.replace(`${srcPath}/`, '').replace(patterns.js, '')*/
+    let linkTitle = title
+    let linkUrl = outputPath.replace(docGenPath, '')
+
+    indexLinks += `+ [${linkTitle}](${linkUrl}.md)\n`
 
     fs.exists(parentPath, exists => {
       if (exists === false) {
@@ -348,7 +365,7 @@ function writeDocGen({srcList, outputMarkdown}, done) {
       return
     }
 
-    fs.writeFile(`${docGenPath}/index.md`, indexLinks, done)
+    fs.writeFile(`${docGenPath}/readme.md`, indexLinks, done)
   })
 }
 

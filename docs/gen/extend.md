@@ -2,6 +2,9 @@
 
 + [extend](#extend)
 
+Most of the modules like Web3, Eth, Net, Accounts, and Contract
+get a method named `extend`
+
 ## extend
 
 + options, `object`

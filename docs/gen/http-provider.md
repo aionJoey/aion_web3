@@ -1,2 +1,2 @@
-# http-provider
+# HttpProvider
 

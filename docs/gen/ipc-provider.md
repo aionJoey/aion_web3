@@ -1,2 +1,2 @@
-# ipc-provider
+# IpcProvider
 

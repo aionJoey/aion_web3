@@ -1,4 +1,4 @@
-# contract
+# Contract
 
 + [Contract](#Contract)
 + [clone](#clone)
