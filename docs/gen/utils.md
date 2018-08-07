@@ -29,7 +29,7 @@
 + [hexToUtf8](#hexToUtf8)
 + [hexToAscii](#hexToAscii)
 + [asciiToHex](#asciiToHex)
-+ [](#)
++ [toTwosComplement](#toTwosComplement)
 + [blake2b256](#blake2b256)
 
 ## randomHex
@@ -233,7 +233,7 @@ Convert hex string to ASCII encoded string
 
 Convert ASCII to hex encoded string with leading 0x
 
-## 
+## toTwosComplement
 
 + val, `number|BN|BigNumber`
 + returns `string` 
