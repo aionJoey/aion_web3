@@ -13,7 +13,7 @@ Work with the Eth-like web3 interface for Aion
 
 ## subscribe
 
-*instance member* / *deprecated: one*
+*instance member*
 
 + evtName, `string`, event name
 + opts, `object`, *optional*
