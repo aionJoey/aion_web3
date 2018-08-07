@@ -228,8 +228,8 @@ Convert hex string to ASCII encoded string
 
 ## asciiToHex
 
-+ val, `[type]`, *optional*
-+ returns `[type]` 
++ val, `string`
++ returns `string` 
 
 Convert ASCII to hex encoded string with leading 0x
 
@@ -242,8 +242,8 @@ Twos Compliment binary number function to hex string with leading 0x
 
 ## blake2b256
 
-+ val, `[type]`, *optional*
-+ returns `[type]` 
++ val, `string|number|buffer`
++ returns `string` 
 
 blake2b 256 hash string with leading 0x
 

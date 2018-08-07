@@ -31,8 +31,8 @@ Iban constructor `new Iban(ibanAddress)`
 
 *instance member*
 
-+ ibanAddress, `[type]`, *optional*
-+ returns `[type]` 
++ ibanAddress, `string`
++ returns `string` 
 
 Convert IBAN to Aion address
 

@@ -51,7 +51,7 @@ Get an account by providing a private key
 + tx.type, `number`, defaults to 0x01, for future use, *optional*
 + privateKey, `buffer`
 + done, `function`
-+ returns `[type]` 
++ returns `object` promise
 
 Sign a transaction object with a private key.
 
@@ -122,10 +122,10 @@ Encrypt an account to keystore v3 format
 
 *instance member*
 
-+ ksv3, `[type]`, *optional*
-+ password, `[type]`, *optional*
-+ nonStrict, `[type]`, *optional*
-+ returns `[type]` 
++ ksv3, `object`
++ password, `string`
++ nonStrict, `boolean`
++ returns `object` account
 
 Decrypt the keystorev3 object
 
