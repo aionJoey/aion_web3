@@ -93,11 +93,6 @@ function toBuffer(val, encoding) {
     if (isHex(val) === true) {
       return Buffer.from(removeLeadingZeroX(val), 'hex')
     }
-
-    // base64
-    if (patterns.base64.test(val) === true) {
-      return Buffer.from(val, 'base64')
-    }
   }
 
   // anything else
