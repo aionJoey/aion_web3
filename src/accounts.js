@@ -10,6 +10,7 @@ let {isFunction, isObject, find} = require('underscore')
 
 // aion-specific rlp fork
 let rlp = require('rlp')
+let {AionLong} = rlp
 
 let {assignExtend} = require('./extend')
 let {assignProvider} = require('./providers')
@@ -50,27 +51,27 @@ let methods = [
     name: 'getTransactionCount',
     call: 'eth_getTransactionCount',
     params: 2,
-    inputFormatter: [inputAddressFormatter, inputBlockNumberFormatter]
+    inputFormatter: [inputAddressFormatter, inputBlockNumberFormatter],
+    outputFormatter: hexToNumber
   }
 ]
 
 // address + message signature length
 let aionPubSigLen = nacl.sign.publicKeyLength + nacl.sign.signatureLength
 
-function fromNat(val) {
-  if (
-    val === undefined ||
-    val === null ||
-    val === 0 ||
-    val === '0' ||
-    val === '0x0'
-  ) {
-    return '0x'
-  }
-  return numberToBn(val)
-}
-
+/**
+ * Aion transaction timestamp
+ * @returns {number}
+ */
 let getTimestamp = () => Math.floor(Date.now() / 1000)
+
+/**
+ * RLP long type for Java
+ * @method
+ * @param {number} val
+ * @returns {object}
+ */
+let toLong = val => new AionLong(numberToBn(val))
 
 /**
  * Account constructor
@@ -154,7 +155,7 @@ Accounts.prototype._findAccountByPrivateKey = function(privateKey) {
     if (itemPrivateKey === undefined) {
       return false
     }
-    return equalBuffers(privateKey, itemPrivateKey)
+    return equalBuffers(privateKey, itemPrivateKey) === true
   })
 }
 
@@ -164,7 +165,7 @@ Accounts.prototype._findAccountByPublicKey = function(publicKey) {
     if (itemPublicKey === undefined) {
       return false
     }
-    return equalBuffers(publicKey, itemPublicKey)
+    return equalBuffers(publicKey, itemPublicKey) === true
   })
 }
 
@@ -274,10 +275,6 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       type = 1
     } = transaction
 
-    if (gas === undefined) {
-      gas = gasPrice
-    }
-
     /*
 
     Ethereum:
@@ -317,29 +314,24 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     */
 
     let rlpValues = [
-      fromNat(nonce),
-      to.toLowerCase(),
-      fromNat(value),
+      nonce,
+      to,
+      value,
       data,
-      fromNat(timestamp),
-      fromNat(gas),
-      fromNat(gasPrice),
-      fromNat(type)
+      timestamp,
+      toLong(gas),
+      toLong(gasPrice),
+      toLong(type)
     ]
 
     // Aion-specific RLP encode
     let encoded = rlp.encode(rlpValues)
 
-    // hash it
-    let messageHash = blake2b256(encoded)
-
     // sign
-    let signature = toBuffer(nacl.sign.detached(messageHash, privateKey))
+    let signature = toBuffer(nacl.sign.detached(encoded, privateKey))
 
     // verify
-    if (
-      nacl.sign.detached.verify(messageHash, signature, publicKey) === false
-    ) {
+    if (nacl.sign.detached.verify(encoded, signature, publicKey) === false) {
       throw new Error(`
       Could not verify signature.
       address: ${address},
@@ -357,6 +349,9 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
     // re-enode
     let rawTransaction = rlp.encode(rawTx)
+
+    // hash
+    let messageHash = bytesToHex(blake2b256(rawTransaction))
 
     messageHash = bytesToHex(messageHash)
     signature = bytesToHex(aionPubSig)
@@ -376,12 +371,8 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
         return done(err)
       }
 
-      // try {
       let op = sign(res)
       done(null, op)
-      // } catch (e) {
-      // done(e)
-      // }
     })
     return
   }
@@ -393,12 +384,8 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
         return reject(err)
       }
 
-      // try {
       let op = sign(res)
       resolve(op)
-      // } catch (e) {
-      // reject(e)
-      // }
     })
   })
 }
