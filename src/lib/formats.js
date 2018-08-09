@@ -66,17 +66,21 @@ function equalBuffers(buf1, buf2) {
   }
 
   return buf1.every((byte, index) => {
-    return (buf2[index] = byte)
+    return buf2[index] === byte
   })
 }
 
 /**
  * Gracefully try to convert anything into a buffer
  * @param {object} val anything
- * @param {string} encoding hex, base64, utf8
+ * @param {string} encoding hex, utf8
  * @return {buffer}
  */
 function toBuffer(val, encoding) {
+  if (val === undefined || val === null) {
+    return Buffer.from([])
+  }
+
   // buffer or array
   if (isArray(val) === true || Buffer.isBuffer(val) === true) {
     return Buffer.from(val)
