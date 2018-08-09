@@ -155,6 +155,9 @@ function assignExtend(context, {methods = []}) {
       provider.send(payload, (err, res) => {
         if (err !== null && err !== undefined) {
           // attach more info to error for the developer
+          if (typeof err === 'string') {
+            err = new Error(err)
+          }
           err.args = args
           err.payload = payload
           return done(err)
