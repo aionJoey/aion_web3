@@ -142,7 +142,11 @@ function inputSignFormatter(data) {
   return isHexStrict(data) ? data : utf8ToHex(data)
 }
 
-function outputTransactionFormatter(tx = {}) {
+function outputTransactionFormatter(tx) {
+  if (isObject(tx) === false) {
+    throw new Error('invalid transaction ' + tx)
+  }
+
   if (tx.blockNumber !== null) tx.blockNumber = hexToNumber(tx.blockNumber)
   if (tx.transactionIndex !== null)
     tx.transactionIndex = hexToNumber(tx.transactionIndex)
@@ -166,7 +170,7 @@ function outputTransactionFormatter(tx = {}) {
 }
 
 function outputTransactionReceiptFormatter(receipt) {
-  if (typeof receipt !== 'object') {
+  if (isObject(receipt) === false) {
     throw new Error('Received receipt is invalid: ' + receipt)
   }
 
