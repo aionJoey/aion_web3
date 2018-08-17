@@ -181,7 +181,7 @@ describe('Accounts', () => {
 
   it('basicEncodingTest', done => {
 
-    // From AionTransactionIntegrationTest.java (tx_encoding_tests branch)
+    // Reference Data [AionTransactionIntegrationTest.java - tx_encoding_tests branch]
     let obj = JSON.parse(`{
       "privateKey": "ab5e32b3180abc5251420aecf1cd4ed5f6014757dbdcf595d5ddf907a43ebd4af2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a45079428525",
       "tx": {
@@ -226,7 +226,12 @@ describe('Accounts', () => {
       signedTransaction = res
       done()
     })
+
     // console.log(signedTransaction);
+    assertEquals(signedTransaction.encoded, obj.raw);
+    assertEquals(signedTransaction.signature, obj.ed_sig);
+    assertEquals(signedTransaction.aionPubSig, obj.aion_sig);
+    assertEquals(signedTransaction.rawTransaction, obj.signed);
 
   })
 });
