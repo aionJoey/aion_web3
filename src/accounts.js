@@ -7,6 +7,7 @@ let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
 let {isFunction, isObject, find} = require('underscore')
+let BN = require('bn.js')
 
 // aion-specific rlp fork
 let rlp = require('rlp')
@@ -71,7 +72,7 @@ let getTimestamp = () => Math.floor(Date.now() / 1000)
  * @param {number} val
  * @returns {object}
  */
-let toLong = val => new AionLong(numberToBn(val))
+let toLong = val => new AionLong(new BN(val))
 
 /**
  * Account constructor
@@ -102,7 +103,7 @@ function Account({accounts, entropy, privateKey}) {
 
 Account.prototype.signTransaction = function(tx, done) {
   let {privateKey} = this
-  return this._accounts.signTransaction(tx, privateKey, done)
+  return this._accounts.signTransactionWithKey(tx, privateKey, done)
 }
 
 Account.prototype.sign = function(message) {
@@ -204,19 +205,20 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
  * @instance
  * @method signTransaction
  * @param {object} tx
- * @param {number} [tx.nonce]
- * @param {string} [tx.to]
- * @param {number} [tx.value]
+ * @param {buffer} [tx.nonce]
+ * @param {buffer} [tx.to]
+ * @param {buffer} [tx.value]
  * @param {buffer} [tx.data]
- * @param {number} [tx.timestamp]
- * @param {number} tx.gas nrg in aion terms
+ * @param {buffer} [tx.timestamp]
+ * @param {number} [tx.gas] nrg in aion terms
  * @param {number} [tx.gasPrice] nrg price
- * @param {number} [tx.type] defaults to 0x01, for future use
+ * @param {buffer} [tx.type] defaults to 0x01, for future use
  * @param {buffer} privateKey
  * @param {function} done
  * @returns {object} promise
  */
-Accounts.prototype.signTransaction = function(tx, privateKey, done) {
+Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
+
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
       return done(err)
@@ -245,8 +247,9 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   }
 
   let steps = {}
-  let {address, publicKey} = this.privateKeyToAccount(privateKey)
+  let {address, publicKey} = this.privateKeyToAccount(privateKey) // keys are always inconsistent
   let transaction = Object.assign({}, tx)
+  // console.log('privateKey', privateKey);
 
   if (transaction.gasPrice === undefined) {
     // get gas price
@@ -256,6 +259,16 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
   if (transaction.nonce === undefined) {
     // get transaction count to use as nonce
     steps.nonce = done => this.getTransactionCount(address, 'latest', done)
+  }
+
+  // Added timestamp check
+  if (transaction.timestamp === undefined) {
+    timestamp = getTimestamp();
+  }
+
+  // Added type check
+  if (transaction.type === undefined) {
+    type = 1;
   }
 
   function sign(res) {
@@ -269,10 +282,10 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       to,
       value,
       data,
-      timestamp = getTimestamp(),
+      timestamp,    // = getTimestamp();
       gas,
       gasPrice,
-      type = 1
+      type          // =1;
     } = transaction
 
     /*
@@ -313,6 +326,10 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
 
     */
 
+    // Equivalent values in AION:
+    // AION: [nrg] & [nrgPrice]
+    // Web3: [gas] & [gasPrice]
+
     let rlpValues = [
       nonce,
       to,
@@ -324,14 +341,19 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
       toLong(type)
     ]
 
+    // Equivalent values in AION:
+    // AION: [rlp]       --encode--> [raw]     --sign--> [ed_sig]    + [aion_sig]   --encode--> [signed]
+    // Web3: [rlpValues] --encode--> [encoded] --sign--> [signature] + [aionPubSig] --encode--> [rawTransaction]
+    // https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modAion/test/org/aion/types/AionTransactionIntegrationTest.java
+
     // Aion-specific RLP encode
     let encoded = rlp.encode(rlpValues)
 
-    // sign
-    let signature = toBuffer(nacl.sign.detached(encoded, privateKey))
+    // sign (should hash at the start)
+    let signature = toBuffer(nacl.sign.detached(blake2b256(encoded), privateKey))
 
-    // verify
-    if (nacl.sign.detached.verify(encoded, signature, publicKey) === false) {
+    // verify (should hash at the start)
+    if (nacl.sign.detached.verify(blake2b256(encoded), signature, publicKey) === false) {
       throw new Error(`
       Could not verify signature.
       address: ${address},
@@ -347,20 +369,24 @@ Accounts.prototype.signTransaction = function(tx, privateKey, done) {
     let rawTx = rlp.decode(encoded)
     rawTx.push(toBuffer(aionPubSig))
 
-    // re-enode
+    // re-encode
     let rawTransaction = rlp.encode(rawTx)
 
-    // hash
-    let messageHash = bytesToHex(blake2b256(rawTransaction))
+    // hash (shouldn't hash at the end)
+    let messageHash = bytesToHex(rawTransaction)
 
-    messageHash = bytesToHex(messageHash)
-    signature = bytesToHex(aionPubSig)
-    rawTransaction = bytesToHex(rawTransaction)
+    // messageHash and rawTransaction does the same thing?
+    encoded = bytesToHex(encoded);
+    signature = bytesToHex(aionPubSig);
+    aionPubSig = bytesToHex(aionPubSig);
+    rawTransaction = bytesToHex(rawTransaction);
 
     return {
-      messageHash,
+      encoded,
       signature,
-      rawTransaction
+      aionPubSig,
+      rawTransaction,
+      messageHash
     }
   }
 
@@ -631,6 +657,8 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
 
   let keyStart = derivedKey.slice(0, 16)
   let keyEnd = derivedKey.slice(16, 32)
+
+  // MAC DECRYPT INCORRECT
   let mac = keccak256(Buffer.concat([keyEnd, cipherBuf]))
 
   if (mac !== keystore.crypto.mac) {

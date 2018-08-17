@@ -1,10 +1,16 @@
 let {Buffer} = require('safe-buffer')
 let {isBuffer} = Buffer
 let assert = require('assert')
+let should = require('should')
 let Accounts = require('../../src/accounts')
-let {equalAddresses} = require('../../src/lib/accounts')
+let {equalAddresses, isPrivateKey} = require('../../src/lib/accounts')
 let values = require('../../src/lib/values')
 let {testProvider} = require('./fixtures')
+
+// aion-specific rlp fork
+let rlp = require('rlp');
+let {AionLong} = rlp;
+let BN = require('bn.js');
 
 let msg = 'test message'
 let password = 'test password'
@@ -57,10 +63,12 @@ describe('Accounts', () => {
 
       res.messageHash.should.be.a.String
       res.signature.should.be.a.String
+      res.aionPubSig.should.be.a.String
       res.rawTransaction.should.be.a.String
 
       res.messageHash.startsWith('0x').should.be.exactly(true)
       res.signature.startsWith('0x').should.be.exactly(true)
+      res.aionPubSig.startsWith('0x').should.be.exactly(true)
       res.rawTransaction.startsWith('0x').should.be.exactly(true)
 
       signedTransaction = res
@@ -82,6 +90,7 @@ describe('Accounts', () => {
     signed.signature.should.be.a.String
   })
 
+  // should read from signedTransaction.aionPubSig instead of signedTransaction.signature
   it('recover', () => {
     // from above signTransaction
     accounts
@@ -102,7 +111,7 @@ describe('Accounts', () => {
       .should.be.exactly(signedTransactionAccount)
   })
 
-  xit('encrypt (scrypt, slow)', () => {
+  it('encrypt (scrypt, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'scrypt'
@@ -110,7 +119,7 @@ describe('Accounts', () => {
     keystore.version.should.be.exactly(3)
   })
 
-  xit('encrypt (pbkdf2, slow)', () => {
+  it('encrypt (pbkdf2, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'pbkdf2'
@@ -131,7 +140,7 @@ describe('Accounts', () => {
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'scrypt'
     })
-    let decryptedAccount = accounts.decrypt(keystore, password)
+    let decryptedAccount = accounts.decrypt(keystore, password, true)
     assert.equal(account.address, decryptedAccount.address)
   })
 
@@ -140,7 +149,84 @@ describe('Accounts', () => {
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'pbkdf2'
     })
-    let decryptedAccount = accounts.decrypt(keystore, password)
+    let decryptedAccount = accounts.decrypt(keystore, password, true)
     assert.equal(account.address, decryptedAccount.address)
   })
-})
+
+
+/*
+
+  ported from:
+  https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modAion/test/org/aion/types/AionTransactionTest.java
+  https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modAion/test/org/aion/types/AionTransactionIntegrationTest.java
+
+*/
+
+  // assertEquals(tx, tx2)
+  const assertTransaction = (tx, tx2) => {
+
+    // transaction details
+    assert.equal(tx.hashMessage, tx2.hashMessage);
+    assert.equal(tx.timestamp, tx2.timestamp);
+
+    // transaction properties (transaction.js)
+    assert.equal(tx.data, tx2.data);
+    assert.equal(tx.value, tx2.value);
+    assert.equal(tx.gas, tx2.gas);
+    assert.equal(tx.gasPrice, tx2.gasPrice);
+    assert.equal(tx.nonce, tx2.nonce);
+    assert.equal(tx.type, tx2.type);
+
+  }
+
+  it('basicEncodingTest', done => {
+
+    // From AionTransactionIntegrationTest.java (tx_encoding_tests branch)
+    let obj = JSON.parse(`{
+      "privateKey": "ab5e32b3180abc5251420aecf1cd4ed5f6014757dbdcf595d5ddf907a43ebd4af2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a45079428525",
+      "tx": {
+        "nrgPrice": 10000000000,
+        "nrg": 1000000,
+        "data": "a035872d6af8639ede962dfe7536b0c150b590f3234a922fb7064cd11971b58e",
+        "to": "9aabf5b86690ca4cae3fada8c72b280c4b9302dd8dd5e17bd788f241d7e3045c",
+        "type": 1,
+        "nonce": "01",
+        "value": "01",
+        "timestamp": "00057380e1f5330b"
+      },
+      "ed_sig": "6b00ed09ecc49814092b498d49c49f23cdfa71746b2723696b04ce601e87f5a3858e68c7f7e69f913f7e0b303e16b5fc3fa92829e24d6085a45092f5118b140a",
+      "raw": "f85b01a09aabf5b86690ca4cae3fada8c72b280c4b9302dd8dd5e17bd788f241d7e3045c01a0a035872d6af8639ede962dfe7536b0c150b590f3234a922fb7064cd11971b58e8800057380e1f5330b830f42408800000002540be40001",
+      "signed": "f8bd01a09aabf5b86690ca4cae3fada8c72b280c4b9302dd8dd5e17bd788f241d7e3045c01a0a035872d6af8639ede962dfe7536b0c150b590f3234a922fb7064cd11971b58e8800057380e1f5330b830f42408800000002540be40001b860f2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a450794285256b00ed09ecc49814092b498d49c49f23cdfa71746b2723696b04ce601e87f5a3858e68c7f7e69f913f7e0b303e16b5fc3fa92829e24d6085a45092f5118b140a",
+      "aion_sig": "f2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a450794285256b00ed09ecc49814092b498d49c49f23cdfa71746b2723696b04ce601e87f5a3858e68c7f7e69f913f7e0b303e16b5fc3fa92829e24d6085a45092f5118b140a"
+    }`);
+
+    // Generate new account with privateKey
+    let privateKey = Buffer.from(obj.privateKey, 'hex');
+    let account = accounts.privateKeyToAccount(privateKey);
+    signedTransactionAccount = account.address;
+    // console.log(isPrivateKey(privateKey));
+    // console.log(isBuffer(privateKey));
+
+    // Modify parameter inputs as Buffer type
+    tx = obj.tx;
+    tx.nonce = Buffer.from(obj.tx.nonce, 'hex');
+    tx.to = Buffer.from(obj.tx.to, 'hex');
+    tx.value = Buffer.from(obj.tx.value, 'hex');
+    tx.data = Buffer.from(obj.tx.data, 'hex');
+    tx.timestamp = Buffer.from(obj.tx.timestamp, 'hex');
+    tx.type = Buffer.alloc(1).writeUInt8(obj.tx.type, 0);
+    tx.gasPrice = obj.tx.nrgPrice;
+    tx.gas = obj.tx.nrg;
+
+    let temp = account.signTransaction(tx, (err, res) => {
+      if (err !== null && err !== undefined) {
+        console.error('error signTransaction', err)
+        return done(err)
+      }
+      signedTransaction = res
+      done()
+    })
+    // console.log(signedTransaction);
+
+  })
+});
