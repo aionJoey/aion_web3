@@ -168,7 +168,9 @@ let ethRpcCases = [
     mod: 'eth',
     name: 'sendSignedTransaction',
     call: 'eth_sendRawTransaction',
-    params: 1
+    params: 1,
+    expected:
+      '0xf79a1c9ff9a3e39b7e6383b009c84f7826841406b1fc4b2cc87ee0686cb31a74'
   },
   {
     mod: 'eth',

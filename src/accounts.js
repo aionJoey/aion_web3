@@ -144,9 +144,7 @@ Accounts instance members
 Accounts.prototype.create = function(entropy) {
   let accounts = this
   let account = new Account({accounts, entropy})
-
-  // it could automatically add into the wallet
-  // this.wallet.add(account)
+  this.wallet.add(account)
   return account
 }
 
@@ -171,13 +169,7 @@ Accounts.prototype._findAccountByPublicKey = function(publicKey) {
 }
 
 Accounts.prototype._findAccountByAddress = function(address) {
-  return find(this.wallet, item => {
-    let itemAddress = get(item, 'address')
-    if (itemAddress === undefined) {
-      return false
-    }
-    return address === itemAddress
-  })
+  return this.wallet[address]
 }
 
 /**
@@ -218,7 +210,6 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
  * @returns {object} promise
  */
 Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
-
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
       return done(err)
