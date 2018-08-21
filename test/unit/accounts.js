@@ -157,33 +157,15 @@ describe('Accounts', () => {
 /*
 
   ported from:
-  https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modAion/test/org/aion/types/AionTransactionTest.java
   https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modAion/test/org/aion/types/AionTransactionIntegrationTest.java
 
 */
 
-  // assertEquals(tx, tx2)
-  const assertTransaction = (tx, tx2) => {
-
-    // transaction details
-    assert.equal(tx.hashMessage, tx2.hashMessage);
-    assert.equal(tx.timestamp, tx2.timestamp);
-
-    // transaction properties (transaction.js)
-    assert.equal(tx.data, tx2.data);
-    assert.equal(tx.value, tx2.value);
-    assert.equal(tx.gas, tx2.gas);
-    assert.equal(tx.gasPrice, tx2.gasPrice);
-    assert.equal(tx.nonce, tx2.nonce);
-    assert.equal(tx.type, tx2.type);
-
-  }
-
   it('basicEncodingTest', done => {
 
-    // Reference Data [AionTransactionIntegrationTest.java - tx_encoding_tests branch]
+    // Reference Data [AionTransactionIntegrationTest.java]
     let obj = JSON.parse(`{
-      "privateKey": "ab5e32b3180abc5251420aecf1cd4ed5f6014757dbdcf595d5ddf907a43ebd4af2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a45079428525",
+        "privateKey": "ab5e32b3180abc5251420aecf1cd4ed5f6014757dbdcf595d5ddf907a43ebd4af2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a45079428525",
       "tx": {
         "nrgPrice": 10000000000,
         "nrg": 1000000,
@@ -227,11 +209,55 @@ describe('Accounts', () => {
       done()
     })
 
+    // console.log('address: ', account.address.toLowerCase());
+    // console.log('privateKey: ', account.privateKey.toString('ascii'));
+    // console.log('publicKey: ', account.publicKey.toString('ascii'));
+
     // console.log(signedTransaction);
-    assertEquals(signedTransaction.encoded, obj.raw);
-    assertEquals(signedTransaction.signature, obj.ed_sig);
-    assertEquals(signedTransaction.aionPubSig, obj.aion_sig);
-    assertEquals(signedTransaction.rawTransaction, obj.signed);
+    assertEquals(signedTransaction.encoded, obj.raw);           // encode of rlp
+    assertEquals(signedTransaction.signature, obj.ed_sig);      // signature
+    assertEquals(signedTransaction.aionPubSig, obj.aion_sig);   // aion signature
+    assertEquals(signedTransaction.rawTransaction, obj.signed); // signed hash
+
+  })
+
+/*
+
+  Ported from:
+  https://github.com/aionnetwork/aion/blob/master/modMcf/src/org/aion/mcf/account/KeystoreItem.java
+
+*/
+  it('encrypt keystore', () => {
+    let privateKey = Buffer.from("888067b634ab1fe5c688c5398e31626509bbfa32f3574d1aeea3d0d489512a09a670c3935a110b47d8d56c3587c0ba711d9701320e4d9f85e7824c97a57cc857", 'hex');
+    let account = accounts.privateKeyToAccount(privateKey);
+
+    let keystore = JSON.parse(`{
+      "address": "a085a20ae12855e721c26bcdd1305c1184ec25b9593cd46614dc0c81b9e34f67",
+      "id": "14b0d66e-4709-4f07-94bf-adde48d53ead",
+      "version": 3,
+      "crypto": {
+        "cipher": "aes-128-ctr",
+        "ciphertext": "b54485e7d7c3ac708e9bfbdf8ce9625d34882f7ce2d0a79eddab7fe38a7584bb715cd3390ad21320c6469798e2b8757c440b61b1f71754c0cd3605d89990afa5",
+        "kdfparams": {
+          "p": 1,
+          "r": 8,
+          "salt": "b21389e2cdd30ffd36a256128b16f3ca8f3abca4be590f7ecb7bbb998d6dc4cc",
+          "dklen": 32,
+          "n": 262144
+        },
+        "cipherparams": {"iv": "ffcca1f3243343d709eba74bf81732c9"},
+        "kdf": "scrypt",
+        "mac": "d3a286e2b5ce77e0bf5a4b98430d88d613fccadca0e2990e79fb15d101be3e15"
+      }
+    }`);
+
+    let bytesKey = accounts.toRlp(keystore);
+
+    console.log('1) password:   ', password);
+    console.log('2) privateKey: ', account.privateKey.toString('hex'));
+    console.log('3) publicKey:  ', account.publicKey.toString('hex'));
+    console.log('4) bytesKey:   ', bytesKey.toString('hex'));
+    console.log('5) keystore:   ', keystore);
 
   })
 });

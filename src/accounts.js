@@ -585,7 +585,10 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
 
   let cipherBuf = Buffer.concat([cipher.update(privateKey), cipher.final()])
   let ciphertext = cipherBuf.toString('hex')
-  let mac = keccak256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
+
+  // should use blake2b256
+  // let mac = keccak256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
+  let mac = blake2b256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
   let version = 3
   let {uuid = crypto.node.randomBytes(values.crypto.uuidRandomBytes)} = options
   let id = uuidv4({random: uuid})
@@ -658,8 +661,9 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
   let keyStart = derivedKey.slice(0, 16)
   let keyEnd = derivedKey.slice(16, 32)
 
-  // MAC DECRYPT INCORRECT
-  let mac = keccak256(Buffer.concat([keyEnd, cipherBuf]))
+  // MAC DECRYPT INCORRECT (should use blake2b256)
+  // let mac = keccak256(Buffer.concat([keyEnd, cipherBuf]))
+  let mac = blake2b256(Buffer.concat([keyEnd, cipherBuf]))
 
   if (mac !== keystore.crypto.mac) {
     throw new Error(`
@@ -675,6 +679,48 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
   let privateKey = Buffer.concat([decipher.update(cipherBuf), decipher.final()])
 
   return this.privateKeyToAccount(privateKey)
+}
+
+/**
+ * Serializes ksv3 object into buffer
+ * https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modMcf/src/org/aion/mcf/account/KeystoreItem.java
+ *
+ * @method toRlpKey
+ * @param {object} ksv3
+ * @return {buffer} Keystore (byte)
+ */
+ Accounts.prototype.toRlp = function(ksv3) {
+
+    var kdfparams=[];
+    kdfparams[0] = "";
+    kdfparams[1] = ksv3.crypto.kdfparams.dklen;
+    kdfparams[2] = ksv3.crypto.kdfparams.n;
+    kdfparams[3] = ksv3.crypto.kdfparams.p;
+    kdfparams[4] = ksv3.crypto.kdfparams.r;
+    kdfparams[5] = ksv3.crypto.kdfparams.salt.toString('hex');
+    var Kdfparams = rlp.encode(kdfparams);
+
+    var cipherparams=[];
+    cipherparams[0] = ksv3.crypto.cipherparams.iv.toString('hex');
+    var Cipherparams = rlp.encode(cipherparams);
+
+    var crypto=[];
+    crypto[0] = 'aes-128-ctr';
+    crypto[1] = ksv3.crypto.ciphertext.toString('hex');
+    crypto[2] = "scrypt";
+    crypto[3] = ksv3.crypto.mac;
+    crypto[4] = Cipherparams;
+    crypto[5] = Kdfparams;
+    var Crypto = rlp.encode(crypto);
+
+    var keystore = [];
+    keystore[0] = ksv3.id;
+    keystore[1] = 3;
+    keystore[2] = ksv3.address;
+    keystore[3] = Crypto;
+    var Keystore = rlp.encode(keystore);
+
+    return Keystore;
 }
 
 module.exports = Accounts
