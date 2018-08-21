@@ -159,7 +159,7 @@ ContractMethod.prototype.send = function(opts, done) {
 
       Object.keys(cm._evts).forEach(key => {
         if (key === 'transactionHash') {
-          cm._evts[key](err)
+          cm._evts[key](res)
         }
       })
     })
