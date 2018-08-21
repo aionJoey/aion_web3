@@ -320,7 +320,6 @@ function Eth(provider, providerOpts) {
     let {currentProvider, accounts} = eth
     let contract = new Contract(jsonInterface, address, options)
     contract.setProvider(currentProvider)
-    console.log('contract.currentProvider', contract.currentProvider)
     contract._accounts = accounts
     return contract
   }

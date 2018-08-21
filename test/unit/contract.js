@@ -221,7 +221,7 @@ describe('Contract', () => {
         done(err)
       })
       .on('transactionHash', transactionHash => {
-        // transactionHash.should.be.a.String
+        transactionHash.should.be.a.String
         deployDone()
       })
       /*.on('receipt', receipt => {
