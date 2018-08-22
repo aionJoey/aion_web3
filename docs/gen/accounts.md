@@ -41,14 +41,14 @@ Get an account by providing a private key
 *instance member*
 
 + tx, `object`
-+ tx.nonce, `buffer`, *optional*
-+ tx.to, `buffer`, *optional*
-+ tx.value, `buffer`, *optional*
++ tx.nonce, `number`, *optional*
++ tx.to, `string`, *optional*
++ tx.value, `number`, *optional*
 + tx.data, `buffer`, *optional*
-+ tx.timestamp, `buffer`, *optional*
-+ tx.gas, `number`, nrg in aion terms, *optional*
++ tx.timestamp, `number`, *optional*
++ tx.gas, `number`, nrg in aion terms
 + tx.gasPrice, `number`, nrg price, *optional*
-+ tx.type, `buffer`, defaults to 0x01, for future use, *optional*
++ tx.type, `number`, defaults to 0x01, for future use, *optional*
 + privateKey, `buffer`
 + done, `function`
 + returns `object` promise

@@ -106,7 +106,3 @@ process.on('unhandledException', err => {
   console.error('unhandledException', err)
   shutdown()
 })
-
-if (process.env.STOP_SERVER === '1') {
-  setTimeout(() => process.exit(), 5000)
-}

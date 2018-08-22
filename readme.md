@@ -126,7 +126,6 @@ npm run integration
 # coverage
 npm run coverage
 
-# before you commit
 # build for production
 npm run prd
 ```

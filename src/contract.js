@@ -5,7 +5,7 @@
 let {EventEmitter} = require('events')
 let get = require('lodash/get')
 let cloneDeep = require('lodash/cloneDeep')
-let {isArray, each, isFunction} = require('underscore')
+let {isArray, each} = require('underscore')
 let {copyString} = require('./lib/formats')
 let abi = require('./abi')
 
@@ -21,7 +21,10 @@ let {assignProvider} = require('./providers')
 
 let {hexToNumber} = require('./utils')
 
-let {functionInterfaceValidator} = require('./lib/contracts')
+let {
+  functionInterfaceValidator
+  /*eventInterfaceValidator*/
+} = require('./lib/contracts')
 
 let methods = [
   {
@@ -62,30 +65,19 @@ let methods = [
     }
   },
   {
-    name: 'sendTransaction',
+    name: 'send',
     call: 'eth_sendTransaction',
     params: 1,
     inputFormatter: [inputTransactionFormatter]
-  },
-  {
-    name: 'sendSignedTransaction',
-    call: 'eth_sendRawTransaction',
-    params: 1
   }
 ]
 
 function ContractMethod({args, provider, contract, accounts}) {
   this._evts = {}
-
-  // callbacks for send().then().catch()
-  this._thenHandler = null
-  this._catchHandler = null
-
   this._contract = contract
   this._accounts = accounts
   this._args = args
   this._outputs = contract.options.jsonInterface.outputs
-
   assignExtend(this, {methods})
   assignProvider(this, {provider})
 }
@@ -94,98 +86,8 @@ ContractMethod.prototype.encodeABI = function(params) {
   return abi.encodeFunctionCall(this._contract.options.jsonInterface, params)
 }
 
-ContractMethod.prototype.send = function(opts, done) {
-  let cm = this
-
-  function sendError(err) {
-    // support callback
-    if (isFunction(done) === true) {
-      done(err)
-    }
-
-    // and on error event
-    Object.keys(cm._evts).forEach(key => {
-      if (key === 'error') {
-        cm._evts[key](err)
-      }
-    })
-
-    // and promise catch
-    if (isFunction(cm._catchHandler) === true) {
-      cm._catchHandler(err)
-    }
-  }
-
-  let {from, gas, gasPrice, value, timestamp, type} = opts
-
-  if (from === undefined) {
-    return sendError(new Error('send from address is required'))
-  }
-
-  if (gas === undefined) {
-    return sendError(new Error('send gas is required'))
-  }
-
-  let {data} = this._contract.options
-
-  if (data === undefined) {
-    return sendError(new Error('send contract data is required'))
-  }
-
-  let account = this._accounts._findAccountByAddress(from)
-
-  if (account === undefined) {
-    return sendError(new Error(`cound not find account for ${from}`))
-  }
-
-  let tx = {
-    gas,
-    gasPrice,
-    value,
-    timestamp,
-    type,
-    data
-  }
-
-  account.signTransaction(tx, (err, res) => {
-    if (err !== null && err !== undefined) {
-      return sendError(err)
-    }
-
-    cm.sendSignedTransaction(res.rawTransaction, (err, res) => {
-      if (err !== null && err !== undefined) {
-        return sendError(err)
-      }
-
-      Object.keys(cm._evts).forEach(key => {
-        if (key === 'transactionHash') {
-          cm._evts[key](res)
-        }
-      })
-    })
-  })
-
-  return cm
-}
-
 ContractMethod.prototype.on = function(evt, fn) {
-  if (evt === 'receipt' || evt === 'confirmation') {
-    throw new Error(`
-      contract receipt and confirmation may not be available
-      until the websocket provider is implemented.
-    `)
-  }
   this._evts[evt] = fn
-  return this
-}
-
-ContractMethod.prototype.then = function(fn) {
-  this._thenHandler = fn
-  return this
-}
-
-ContractMethod.prototype.catch = function(fn) {
-  this._catchHandler = fn
   return this
 }
 
@@ -285,12 +187,44 @@ Contract.prototype.deploy = function(options) {
 
   this.options = Object.assign(this.options, options)
 
-  let contract = this
-  let args = this.options.arguments || []
-  let provider = this.currentProvider
-  let accounts = this._accounts
+  /*let {jsonInterface} = this.options
+  let resolve
+  let reject
 
-  return new ContractMethod({args, provider, contract, accounts})
+  let contractConstructor = find(jsonInterface, item => {
+    return item.name === 'constructor'
+  })
+
+  let originalSend = contract.send
+  let originalSend = contract.send
+
+  contract.send = function(...args) {
+    originalSend(...args)
+    return contract
+  }
+
+  contract.send.request = function() {}
+
+  contract.encodeABI = function() {}
+
+  contract.estimateGas = function() {}
+
+  //
+  // emulate a promise
+  //
+
+  contract.then = (r1, r2) => {
+    resolve = r1
+    if (isFunction(r2) === true) {
+      reject = t2
+    }
+  }
+
+  contract.catch = r => {
+    reject = r
+  }
+*/
+  return this
 }
 
 module.exports = Contract
