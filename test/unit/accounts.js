@@ -135,22 +135,28 @@ describe('Accounts', () => {
     keystore.crypto.mac.should.be.a.String
   })
 
-  xit('decrypt (scrypt, slow)', () => {
+  it('decrypt (scrypt, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'scrypt'
     })
     let decryptedAccount = accounts.decrypt(keystore, password, true)
     assert.equal(account.address, decryptedAccount.address)
+    assert.equal(account.password, decryptedAccount.password);
+    assert.equal(account.publicKey.toString('hex'), decryptedAccount.publicKey.toString('hex'));
+    assert.equal(account.privateKey.toString('hex'), decryptedAccount.privateKey.toString('hex'));
   })
 
-  xit('decrypt (pbkdf2, slow)', () => {
+  it('decrypt (pbkdf2, slow)', () => {
     let account = accounts.create()
     let keystore = accounts.encrypt(account.privateKey, password, {
       kdf: 'pbkdf2'
     })
     let decryptedAccount = accounts.decrypt(keystore, password, true)
     assert.equal(account.address, decryptedAccount.address)
+    assert.equal(account.password, decryptedAccount.password);
+    assert.equal(account.publicKey.toString('hex'), decryptedAccount.publicKey.toString('hex'));
+    assert.equal(account.privateKey.toString('hex'), decryptedAccount.privateKey.toString('hex'));
   })
 
 
@@ -214,10 +220,10 @@ describe('Accounts', () => {
     // console.log('publicKey: ', account.publicKey.toString('ascii'));
 
     // console.log(signedTransaction);
-    assertEquals(signedTransaction.encoded, obj.raw);           // encode of rlp
-    assertEquals(signedTransaction.signature, obj.ed_sig);      // signature
-    assertEquals(signedTransaction.aionPubSig, obj.aion_sig);   // aion signature
-    assertEquals(signedTransaction.rawTransaction, obj.signed); // signed hash
+    assert.equal(signedTransaction.encoded, obj.raw);           // encode of rlp
+    assert.equal(signedTransaction.signature, obj.ed_sig);      // signature
+    assert.equal(signedTransaction.aionPubSig, obj.aion_sig);   // aion signature
+    assert.equal(signedTransaction.rawTransaction, obj.signed); // signed hash
 
   })
 
@@ -227,37 +233,58 @@ describe('Accounts', () => {
   https://github.com/aionnetwork/aion/blob/master/modMcf/src/org/aion/mcf/account/KeystoreItem.java
 
 */
-  it('encrypt keystore', () => {
-    let privateKey = Buffer.from("888067b634ab1fe5c688c5398e31626509bbfa32f3574d1aeea3d0d489512a09a670c3935a110b47d8d56c3587c0ba711d9701320e4d9f85e7824c97a57cc857", 'hex');
-    let account = accounts.privateKeyToAccount(privateKey);
+  it('serialize & deserialize ksv3', () => {
 
-    let keystore = JSON.parse(`{
-      "address": "a085a20ae12855e721c26bcdd1305c1184ec25b9593cd46614dc0c81b9e34f67",
-      "id": "14b0d66e-4709-4f07-94bf-adde48d53ead",
-      "version": 3,
-      "crypto": {
-        "cipher": "aes-128-ctr",
-        "ciphertext": "b54485e7d7c3ac708e9bfbdf8ce9625d34882f7ce2d0a79eddab7fe38a7584bb715cd3390ad21320c6469798e2b8757c440b61b1f71754c0cd3605d89990afa5",
-        "kdfparams": {
-          "p": 1,
-          "r": 8,
-          "salt": "b21389e2cdd30ffd36a256128b16f3ca8f3abca4be590f7ecb7bbb998d6dc4cc",
-          "dklen": 32,
-          "n": 262144
-        },
-        "cipherparams": {"iv": "ffcca1f3243343d709eba74bf81732c9"},
-        "kdf": "scrypt",
-        "mac": "d3a286e2b5ce77e0bf5a4b98430d88d613fccadca0e2990e79fb15d101be3e15"
-      }
-    }`);
+    // Test with ksv3 object from Aion
+    // let privateKey = Buffer.from("13d56ce1caf9c34bb6993880785c67e2bdc8457e51d796ca8d3505f76c404625243b1c695f19af1c43cac38faa995b38c939e2e4124f2224d1ec77d100696bd7", 'hex');
+    // let account1 = accounts.privateKeyToAccount(privateKey);
+    // let ksv3 = JSON.parse(`{
+    //   "address": "a060b99f02c921a7c4ba8656212b34d65d6d466801d709d3c455dab0fa37194e",
+    //   "id": "26c61c69-8323-4640-87ef-46795fa46198",
+    //   "version": 3,
+    //   "crypto": {
+    //     "cipher": "aes-128-ctr",
+    //     "ciphertext": "e5f281387e2c75cf4f64c200135750e876cebb6759a38058bbba6a58a1387f85df74671167039a91b9acbf00f7cb3a60889b5906b762c336a48e263082deb242",
+    //     "kdfparams": {
+    //       "p": 1,
+    //       "r": 8,
+    //       "salt": "a7d691085ba0667b650b39d6134ad2835296f0058e3acd58037c6aed24ce0bbd",
+    //       "dklen": 32,
+    //       "n": 262144
+    //     },
+    //     "cipherparams": {"iv": "24baab0e78c5261de35fd0f6c8053481"},
+    //     "kdf": "scrypt",
+    //     "mac": "d5dbc47fabc8494da6aee925e3d4047a983c14f377375f5b5d16100e4c0b3e8e"
+    //   }
+    // }`);
 
-    let bytesKey = accounts.toRlp(keystore);
+    // Generating a new account from privateKey
+    let account1 = accounts.create();
+    // console.log('1: password:       ', password);
+    // console.log('1: privateKey:     ', account1.privateKey.toString('hex'));
+    // console.log('1: publicKey:      ', account1.publicKey.toString('hex'));
 
-    console.log('1) password:   ', password);
-    console.log('2) privateKey: ', account.privateKey.toString('hex'));
-    console.log('3) publicKey:  ', account.publicKey.toString('hex'));
-    console.log('4) bytesKey:   ', bytesKey.toString('hex'));
-    console.log('5) keystore:   ', keystore);
+    let ksv3 = accounts.encrypt(account1.privateKey, password)
+    let serializedKey = accounts.toRlp(ksv3);
+    // console.log('1: keystore:       ', ksv3);
+    // console.log('X: serializedKey:  ', serializedKey.toString('hex'));
 
+    // Deserialize into account
+    let keystore = accounts.fromRlp(serializedKey);
+    // console.log('2: keystorev3      ', keystore);
+    assert.equal(ksv3.id, keystore.id);
+    assert.equal(ksv3.address, keystore.address);
+    assert.equal(ksv3.crypto.ciphertext, keystore.crypto.ciphertext);
+    assert.equal(ksv3.crypto.cipherparams.iv, keystore.crypto.cipherparams.iv);
+    assert.equal(ksv3.crypto.salt, keystore.crypto.salt);
+    assert.equal(ksv3.crypto.mac, keystore.crypto.mac);
+
+    let account2 = accounts.decrypt(keystore, password, true)
+    // console.log('2: password:       ', password);
+    // console.log('2: privateKey:     ', account2.privateKey.toString('hex'));
+    // console.log('2: publicKey:      ', account2.publicKey.toString('hex'));
+    assert.equal(account1.privateKey.toString('hex'), account2.privateKey.toString('hex'));
+    assert.equal(account1.publicKey.toString('hex'), account2.publicKey.toString('hex'));
   })
+
 });

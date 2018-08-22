@@ -51,6 +51,7 @@ function createA0Address(publicKey) {
   let pkHash = Buffer.from(blake2b256(publicKey)).slice(1, 32)
   let address = Buffer.concat([values.addresses.identifier, pkHash], 32)
   return prependZeroX(address.toString('hex'))
+  // return(address.toString('hex'));
 }
 
 function isAccountAddress(val) {

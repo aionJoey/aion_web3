@@ -588,6 +588,8 @@ Accounts.prototype.encrypt = function(privateKey, password, options = {}) {
 
   // should use blake2b256
   // let mac = keccak256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
+  // console.log('keyEnd ', keyEnd.toString('hex'))
+  // console.log('cipherBuf ', cipherBuf.toString('hex'))
   let mac = blake2b256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
   let version = 3
   let {uuid = crypto.node.randomBytes(values.crypto.uuidRandomBytes)} = options
@@ -661,9 +663,11 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
   let keyStart = derivedKey.slice(0, 16)
   let keyEnd = derivedKey.slice(16, 32)
 
-  // MAC DECRYPT INCORRECT (should use blake2b256)
+  // MAC DECRYPT INCORRECT (should use blake2b256) + toString('hex')
   // let mac = keccak256(Buffer.concat([keyEnd, cipherBuf]))
-  let mac = blake2b256(Buffer.concat([keyEnd, cipherBuf]))
+  // console.log('keyEnd ', keyEnd.toString('hex'))
+  // console.log('cipherBuf ', cipherBuf.toString('hex'))
+  let mac = blake2b256(Buffer.concat([keyEnd, cipherBuf])).toString('hex')
 
   if (mac !== keystore.crypto.mac) {
     throw new Error(`
@@ -685,42 +689,90 @@ Accounts.prototype.decrypt = function(ksv3, password, nonStrict) {
  * Serializes ksv3 object into buffer
  * https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modMcf/src/org/aion/mcf/account/KeystoreItem.java
  *
- * @method toRlpKey
- * @param {object} ksv3
- * @return {buffer} Keystore (byte)
+ * @method toRlp
+ * @param {object} ksv3 (struct)
+ * @return {buffer} Keystore (serialized)
  */
  Accounts.prototype.toRlp = function(ksv3) {
 
-    var kdfparams=[];
-    kdfparams[0] = "";
-    kdfparams[1] = ksv3.crypto.kdfparams.dklen;
-    kdfparams[2] = ksv3.crypto.kdfparams.n;
-    kdfparams[3] = ksv3.crypto.kdfparams.p;
-    kdfparams[4] = ksv3.crypto.kdfparams.r;
-    kdfparams[5] = ksv3.crypto.kdfparams.salt.toString('hex');
-    var Kdfparams = rlp.encode(kdfparams);
+  let kdfparams = [];
+  kdfparams[0] = "";
+  kdfparams[1] = ksv3.crypto.kdfparams.dklen;
+  kdfparams[2] = ksv3.crypto.kdfparams.n;
+  kdfparams[3] = ksv3.crypto.kdfparams.p;
+  kdfparams[4] = ksv3.crypto.kdfparams.r;
+  kdfparams[5] = ksv3.crypto.kdfparams.salt.toString('hex');
+  let Kdfparams = rlp.encode(kdfparams);
 
-    var cipherparams=[];
-    cipherparams[0] = ksv3.crypto.cipherparams.iv.toString('hex');
-    var Cipherparams = rlp.encode(cipherparams);
+  let cipherparams = [];
+  cipherparams[0] = ksv3.crypto.cipherparams.iv.toString('hex');
+  let Cipherparams = rlp.encode(cipherparams);
 
-    var crypto=[];
-    crypto[0] = 'aes-128-ctr';
-    crypto[1] = ksv3.crypto.ciphertext.toString('hex');
-    crypto[2] = "scrypt";
-    crypto[3] = ksv3.crypto.mac;
-    crypto[4] = Cipherparams;
-    crypto[5] = Kdfparams;
-    var Crypto = rlp.encode(crypto);
+  let crypto = [];
+  crypto[0] = 'aes-128-ctr';
+  crypto[1] = ksv3.crypto.ciphertext.toString('hex');
+  crypto[2] = "scrypt";
+  crypto[3] = ksv3.crypto.mac;
+  crypto[4] = Cipherparams;
+  crypto[5] = Kdfparams;
+  let Crypto = rlp.encode(crypto);
 
-    var keystore = [];
-    keystore[0] = ksv3.id;
-    keystore[1] = 3;
-    keystore[2] = ksv3.address;
-    keystore[3] = Crypto;
-    var Keystore = rlp.encode(keystore);
+  let keystore = [];
+  keystore[0] = ksv3.id;
+  keystore[1] = 3;
+  keystore[2] = ksv3.address;
+  keystore[3] = Crypto;
+  let Keystore = rlp.encode(keystore);
 
-    return Keystore;
+  return Keystore;
+}
+
+/**
+ * Deserializes keystore into ksv3 object
+ * https://github.com/aionnetwork/aion/blob/tx_encoding_tests/modMcf/src/org/aion/mcf/account/KeystoreItem.java
+ *
+ * @method fromRlp
+ * @param {object} Keystore (serialized)
+ * @return {buffer} ksv3 (struct)
+ */
+Accounts.prototype.fromRlp = function(keystore) {
+
+  // Store return ksv3 object
+  let ksv3 = new Object();
+  let crypto = new Object();
+  let cipherparams = new Object();
+  let kdfparams = new Object();
+
+  let Ksv3 = rlp.decode(Buffer.from(keystore, 'hex'));
+  ksv3.id = Ksv3[0].toString('utf8');          // id
+  ksv3.version = parseInt(Ksv3[1].toString('hex'), 16);     // version
+  ksv3.address = Ksv3[2].toString('utf8');     // address
+  // console.log(keystore.length)
+
+  let Crypto = rlp.decode(Ksv3[3]);
+  crypto.cipher = Crypto[0].toString('utf8');        // cipher
+  crypto.ciphertext = Crypto[1].toString('utf8');    // ciphertext
+  crypto.kdf = Crypto[2].toString('utf8');           // kdf
+  crypto.mac = Crypto[3].toString('utf8');           // mac
+  // console.log(Crypto.length)
+
+  let Cipherparams = rlp.decode(Crypto[4]);
+  cipherparams.iv = Cipherparams[0].toString('utf8');    // iv
+  // console.log(Cipherparams.length)
+
+  let Kdfparams = rlp.decode(Crypto[5]);
+  // kdfparams.c = Kdfparams[0].toString('utf8');         // c
+  kdfparams.dklen = parseInt(Kdfparams[1].toString('hex'), 16);     // dklen
+  kdfparams.n = parseInt(Kdfparams[2].toString('hex'), 16);         // n
+  kdfparams.p = parseInt(Kdfparams[3].toString('hex'), 16);         // p
+  kdfparams.r = parseInt(Kdfparams[4].toString('hex'), 16);         // r
+  kdfparams.salt = Kdfparams[5].toString('utf8');      // salt
+  // console.log(Kdfparams.length)
+
+  crypto.kdfparams = kdfparams;
+  crypto.cipherparams = cipherparams;
+  ksv3.crypto = crypto;
+  return ksv3;
 }
 
 module.exports = Accounts

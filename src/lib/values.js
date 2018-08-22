@@ -62,7 +62,7 @@ let values = Object.freeze({
   crypto: {
     saltLength: 32,
     ivLength: 16,
-    kdf: 'script',
+    kdf: 'scrypt',
     dklen: 32,
     pbkdf2: {
       c: 262144,
@@ -70,9 +70,9 @@ let values = Object.freeze({
       digest: 'sha256'
     },
     scrypt: {
-      n: 8192,
+      n: 8192,  //262144,
       r: 8,
-      p: 2
+      p: 1
     },
     cipherIvAlgorithm: 'aes-128-ctr',
     uuidRandomBytes: 16
