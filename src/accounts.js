@@ -2,7 +2,6 @@
  * @module Accounts
  */
 
-let numberToBn = require('number-to-bn')
 let parallel = require('async/parallel')
 let get = require('lodash/get')
 let uuidv4 = require('uuid/v4')
@@ -68,7 +67,6 @@ let getTimestamp = () => Math.floor(Date.now() / 1000)
 
 /**
  * RLP long type for Java
- * @method
  * @param {number} val
  * @returns {object}
  */
@@ -144,9 +142,7 @@ Accounts instance members
 Accounts.prototype.create = function(entropy) {
   let accounts = this
   let account = new Account({accounts, entropy})
-
-  // it could automatically add into the wallet
-  // this.wallet.add(account)
+  this.wallet.add(account)
   return account
 }
 
@@ -171,13 +167,7 @@ Accounts.prototype._findAccountByPublicKey = function(publicKey) {
 }
 
 Accounts.prototype._findAccountByAddress = function(address) {
-  return find(this.wallet, item => {
-    let itemAddress = get(item, 'address')
-    if (itemAddress === undefined) {
-      return false
-    }
-    return address === itemAddress
-  })
+  return this.wallet[address]
 }
 
 /**
@@ -218,7 +208,6 @@ Accounts.prototype.privateKeyToAccount = function(privateKey) {
  * @returns {object} promise
  */
 Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
-
   function signTransactionFailed(err) {
     if (isFunction(done) === true) {
       return done(err)
@@ -249,7 +238,6 @@ Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
   let steps = {}
   let {address, publicKey} = this.privateKeyToAccount(privateKey) // keys are always inconsistent
   let transaction = Object.assign({}, tx)
-  // console.log('privateKey', privateKey);
 
   if (transaction.gasPrice === undefined) {
     // get gas price
@@ -259,16 +247,6 @@ Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
   if (transaction.nonce === undefined) {
     // get transaction count to use as nonce
     steps.nonce = done => this.getTransactionCount(address, 'latest', done)
-  }
-
-  // Added timestamp check
-  if (transaction.timestamp === undefined) {
-    timestamp = getTimestamp();
-  }
-
-  // Added type check
-  if (transaction.type === undefined) {
-    type = 1;
   }
 
   function sign(res) {
@@ -282,10 +260,10 @@ Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
       to,
       value,
       data,
-      timestamp,    // = getTimestamp();
+      timestamp = getTimestamp(),
       gas,
       gasPrice,
-      type          // =1;
+      type = 1
     } = transaction
 
     /*
@@ -350,10 +328,15 @@ Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
     let encoded = rlp.encode(rlpValues)
 
     // sign (should hash at the start)
-    let signature = toBuffer(nacl.sign.detached(blake2b256(encoded), privateKey))
+    let signature = toBuffer(
+      nacl.sign.detached(blake2b256(encoded), privateKey)
+    )
 
     // verify (should hash at the start)
-    if (nacl.sign.detached.verify(blake2b256(encoded), signature, publicKey) === false) {
+    if (
+      nacl.sign.detached.verify(blake2b256(encoded), signature, publicKey) ===
+      false
+    ) {
       throw new Error(`
       Could not verify signature.
       address: ${address},
@@ -376,10 +359,10 @@ Accounts.prototype.signTransactionWithKey = function(tx, privateKey, done) {
     let messageHash = bytesToHex(rawTransaction)
 
     // messageHash and rawTransaction does the same thing?
-    encoded = bytesToHex(encoded);
-    signature = bytesToHex(aionPubSig);
-    aionPubSig = bytesToHex(aionPubSig);
-    rawTransaction = bytesToHex(rawTransaction);
+    encoded = bytesToHex(encoded)
+    signature = bytesToHex(aionPubSig)
+    aionPubSig = bytesToHex(aionPubSig)
+    rawTransaction = bytesToHex(rawTransaction)
 
     return {
       encoded,

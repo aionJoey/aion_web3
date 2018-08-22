@@ -302,7 +302,7 @@ function Eth(provider, providerOpts) {
   this.net = new Net()
   this.personal = new Personal()
   this.personal.setProvider(this.currentProvider)
-  this.accounts = new Accounts()
+  this.accounts = new Accounts(this.currentProvider)
 
   /**
    * Create Contract instances from Eth
